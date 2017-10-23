@@ -1,0 +1,41 @@
+.reveal section img {
+    border: 0px;
+    box-shadow: none;
+}
+
+.left-col {
+    width: 50%;
+    float: left;
+}
+
+.right-col {
+    width: 50%;
+    float: right;
+}
+
+.clear-col {
+    float: none;
+    clear: both;
+}
+
+code {
+    color: #22F;
+}
+
+.medium code {
+    font-size: 18px;
+    line-height: 20px;
+}
+
+.small code {
+    font-size: 16px;
+    line-height: 18px;
+}
+
+.small-table td {
+    border: 0px;
+    font-size: 24px;
+    margin: 0px;
+}
+
+
