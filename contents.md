@@ -25,37 +25,62 @@ TODO: intro
 ## 1. Unit Testing
 
 _note_
-* TODO
-* TODO
-
-[NEXT]
-TODO
-
-[NEXT SECTION]
-## 2. Doctests
-
-[NEXT]
-TODO
-
+* classist vs mockist testing
+    - look up newer literature for this
+* say that we're going to start w/ classist testing then move to mockist
+* basic Rust unit test
+* chosen unit test framework
+* same unit tests as before but in new framework
 
 [NEXT SECTION]
-## 3. Mocking
+## 2. Pattern Matching
 
-[NEXT]
-TODO
-
-[NEXT SECTION]
-## 4. Fuzz Testing
-
-[NEXT]
-TODO
+_note_
+* more complex examples that require pattern matching
 
 
 [NEXT SECTION]
-## 5. Service Testing
+## 3. Doctests
 
-[NEXT]
-TODO
+_note_
+* explain what doctests are and given an example
+* discuss when you might want to use module tests vs. doctests
+
+
+[NEXT SECTION]
+## 4. Mocking
+
+_note_
+* Test double definition and types of doubles
+* Introduce `double` crate
+* Basic examples
+    - use examples to explain how double works internally at a basic level
+* More advanced usages
+    - mutable and immutable functions
+    - exactly call matching
+    - "has call" matching
+    - unordered calls
+    - setting action as return value
+        - single call
+        - multiple calls
+    - setting action as closure
+    - has examples for return helpers (some/none/err)
+    - cover mocking `&str` values explicitly (TODO: add a helper to the lib for this?)
+    - mocking methods with a generic type parameter
+
+
+[NEXT SECTION]
+## 5. Fuzz Testing
+
+_note_
+TODO: find a tool that does this in Rust and base section structure on that
+
+
+[NEXT SECTION]
+## 6. Other Cool Things
+
+__note_
+Add anything here you find that's cool but doesn't fit into other sections.
 
 
 [NEXT SECTION]
