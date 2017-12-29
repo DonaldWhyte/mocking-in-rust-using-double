@@ -90,7 +90,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured
 ```
 
 [NEXT]
-TODO: concrete test example
+TODO: concrete test example with GIVEN/WHEN/THEN
 
 [NEXT]
 TODO: doc tests?
@@ -138,7 +138,8 @@ _note_
 No more environment dependencies, no more massive setup. It becomes much
 quicker and easier to write the tests.
 
-It also makes them
+It also makes them less brittle. That is, they're less likely to break when
+the real, concrete dependencies are changed (this is a good and bad thing).
 
 [NEXT]
 ## What to Eliminate
@@ -271,7 +272,7 @@ fn play() {
     let rng = SomeRngImplementation();
 
     // Create a game
-    CoinFlipper game(rng);
+    let mut game = CoinFlipper(rng);
 
     // Start playing
     let flip = game.flip_coin();
@@ -323,7 +324,9 @@ mock_trait!(
 ```
 
 [NEXT]
-Generate implementations of all methods in the mock `struct`:
+## Defining Mock Collaborators
+
+Generate implementations of all methods in mock `struct`:
 
 ```
 impl TraitToMock for NameOfMockStruct {
@@ -333,6 +336,7 @@ impl TraitToMock for NameOfMockStruct {
   mock_method!(methodN_name(&mut self, arg1_type, ..., argM_type) -> return_type);
 }
 ```
+<!-- .element class="small" -->
 
 ```
 impl Rng for MockRng {
@@ -341,51 +345,119 @@ impl Rng for MockRng {
 ```
 
 [NEXT]
-TODO: using the mocks
+## Using Generated Mocks in Tests
+
+```rust
+#[test]
+fn test_coin_flipper_yielding_heads() {
+    // GIVEN:
+    let rng = MockRng::default();
+    rng.next_f64.return_value(0.25);
+
+    // WHEN:
+    let mut game = CoinFlipper::new(rng);
+    let flip = game.flip_coin();
+
+    // THEN:
+    assert_eq!(CoinFlip::Heads, flip);
+
+    assert!(rng.next_f64.called());
+    assert!(rng.next_f64.called_with(()));
+    assert_eq!(1, rng.next_f64.num_calls());
+}
+```
+<!-- .element class="medium" -->
+
+[NEXT]
+#### GIVEN: Setting Mock Behaviour
+
+TODO
+
+[NEXT]
+#### THEN: Asserting Mock Was Used in the Expected Way
+
+TODO
 
 [NEXT]
 ## Limitations
 
-* Argument and return value types must implement the `Clone` trait
-*
-
-[NEXT SECTION]
-## 4. Pattern Matching
-
-_note_
-* more complex examples that require pattern matching
-
-
-[NEXT SECTION]
-## 5. Advanced Double Usage
+* Argument/return value types must implement these traits:
+  - `Clone`
+  - `Debug`
+  - `Eq`
+  - `Hash`
+* Return value type must also implement:
+  - `Default`
 
 _note_
-* Test double definition and types of doubles
-* Introduce `double` crate
-* Basic examples
-    - use examples to explain how double works internally at a basic level
-* More advanced usages
-    - mutable and immutable functions
-    - exactly call matching
-    - "has call" matching
-    - unordered calls
-    - setting action as return value
-        - single call
-        - multiple calls
-    - setting action as closure
-    - has examples for return helpers (some/none/err)
-    - cover mocking `&str` values explicitly (TODO: add a helper to the lib for this?)
-    - mocking methods with a generic type parameter
+TODO: add explanation in notes for why each is implemented
 
 [NEXT]
+## `&str` Arguments
+
 TODO
+
+[NEXT]
+## Generic Type Arguments
+
+TODO
+
+
+[NEXT SECTION]
+## 5. Additional Double Usage
+
+_note_
+More advanced features like;
+
+- mutable and immutable functions
+- exactly call matching
+- "has call" matching
+- unordered calls
+- setting action as return value
+    - single call
+    - multiple calls
+- setting action as closure
+- has examples for return helpers (some/none/err)
+
+[NEXT]
+### TODO
+
+[NEXT]
+### Using double Mocks for Free Functions
+
+TODO
+
+[NEXT]
+### `Option` Helper
+
+TODO
+
+[NEXT]
+### `Result` Helper
+
+TODO
+
+
+[NEXT]
+### Pattern Matching
+
+TODO: more complex examples that require pattern matching
 
 
 [NEXT SECTION]
 ## 6. Rust Limitations
 
 [NEXT]
-TODO
+TODO: mention that the vision for this library that this must be usable in `stable`
+
+TODO: there exist many other mocking libraries that use nightly compiler plugins
+
+TODO: this makes
+
+[NEXT]
+TODO: limitations of using stable
+
+TODO: how I got around those limitations
 
 
 [NEXT SECTION]
@@ -396,11 +468,14 @@ TODO: conclusion
 
 [NEXT]
 <!-- .slide: class="small" -->
-### Code
-https://github.com/DonaldWhyte/testing-and-mocking-in-rust
+### Example Code in this Talk
+https://github.com/DonaldWhyte/mocking-in-rust-using-double/tree/master/code
 
 ### Slides
-http://donsoft.io/testing-and-mocking-in-rust
+http://donsoft.io/mocking-in-rust-using-double
+
+### double Repository
+https://github.com/DonaldWhyte/double
 
 [NEXT]
 ### Get In Touch
