@@ -42,7 +42,6 @@ code {
     margin: 0px;
 }
 
-
 .bio-table td {
     text-align: center !important;
     border: 0px !important;
@@ -55,7 +54,7 @@ code {
 
 /* Images */
 img[alt="portrait"] {
-    width: 350px;
+    width: 250px;
     border: 2px solid black !important;
 }
 
@@ -64,4 +63,10 @@ img[alt="small_portrait"] {
     border: 2px solid black !important;
 }
 
+img[alt="coin_flip"] {
+    width: 375px;
+}
 
+img[alt="coin_flip_collaborators"] {
+    width: 450px;
+}
