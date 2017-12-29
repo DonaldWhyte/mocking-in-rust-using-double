@@ -21,11 +21,13 @@
 [NEXT]
 ## Outline
 
-* Google Test
-* Why Mock?
-* Rust Mocking
-* Real Life Example
-* When to Mock
+1. Unit Testing in Rust
+2. Why Mock?
+3. Mocking in Rust with `double`
+4. Pattern Matching
+5. Advanced `double` Features
+6. Rust Limitations
+
 
 [NEXT SECTION]
 ## 1. Unit Testing
@@ -54,10 +56,12 @@ Test fixture automatically generated:
 
 ```rust
 > cat src/lib.rs
+
 #[cfg(test)]
 mod tests {
     #[test]
     fn it_works() {
+        // test code in here
     }
 }
 ```
@@ -84,6 +88,12 @@ running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured
 ```
+
+[NEXT]
+TODO: concrete test example
+
+[NEXT]
+TODO: doc tests?
 
 [NEXT SECTION]
 ## 2. Why Mock?
@@ -149,7 +159,7 @@ Downsides to testing internal code dependencies:
 * component is tested with mock collaborators that behave like you *think* they do
 * real collaborators may behave differently
 * real collaborators behaviour may *change*
-* unit test w/ mocks won't pick that up
+* unit test with mocks won't pick that up
 * still need integration tests to ensure real components work together
 
 Despite these downsides, some believe the cost is worth simpler tests, because
@@ -193,7 +203,7 @@ _note_
 WHY? Mocks are the most flexible. They're a superset of stubs and spies.
 
 [NEXT SECTION]
-## 3. Mocking in Rust Using Double
+## 3. Mocking in Rust Using `double`
 
 [NEXT]
 ## Coin Flipper
@@ -214,12 +224,12 @@ We can change a number generator at runtime, using dependency injection
 ```cpp
 // Simplified version of `Rng` trait in the `rand` crate
 pub trait Rng {
-  fn next_f64(&mut self) -> f64;
+    fn next_f64(&mut self) -> f64;
 }
 
 enum CoinFlip {
-  Heads,
-  Tails,
+    Heads,
+    Tails,
 }
 ```
 
@@ -230,24 +240,24 @@ TODO: compile and test
 
 ```cpp
 struct CoinFlipper {
-  rng: Rng,
+    rng: Rng,
 }
 
 impl CoinFlipper {
-  pub fn new(rng: Rng) -> CoinFlipper {
-    CoinFlipper {
-      rng: rng
+    pub fn new(rng: Rng) -> CoinFlipper {
+        CoinFlipper {
+            rng: rng
+        }
     }
-  }
 
-  pub fn flip_coin(&mut self) -> {
-    let r = rng.next_f64();
-    if r < 0.5 {
-      CoinFlip::Heads
-    } else {
-      CoinFlip::Tails
+    pub fn flip_coin(&mut self) -> {
+        let r = rng.next_f64();
+        if r < 0.5 {
+            CoinFlip::Heads
+        } else {
+            CoinFlip::Tails
+        }
     }
-  }
 }
 ```
 <!-- .element class="small" -->
@@ -266,9 +276,9 @@ fn play() {
     // Start playing
     let flip = game.flip_coin();
     if flip == CoinFlip::Heads {
-      println!("Heads!");
+        println!("Heads!");
     } else {
-      println!("Tails!");
+        println!("Tails!");
     }
 }
 ```
@@ -293,8 +303,51 @@ fn play() {
 * TODO: other good stuff
 
 [NEXT]
-TODO
+## Defining Mock Collaborators
 
+Generate mock `struct`:
+
+```rust
+mock_trait!(
+    NameOfMockStruct,
+    method1_name(arg1_type, ..., argM_type) -> return_type,
+    method2_name(arg1_type, ..., argM_type) -> return_type
+    ...
+    methodN_name(arg1_type, ..., argM_type) -> return_type);
+```
+
+```rust
+mock_trait!(
+    MockRng,
+    next_f64() -> f64);
+```
+
+[NEXT]
+Generate implementations of all methods in the mock `struct`:
+
+```
+impl TraitToMock for NameOfMockStruct {
+  mock_method!(method1_name(&self, arg1_type, ..., argM_type) -> return_type);
+  mock_method!(method2_name(&mut self, arg1_type, ..., argM_type) -> return_type);
+  ...
+  mock_method!(methodN_name(&mut self, arg1_type, ..., argM_type) -> return_type);
+}
+```
+
+```
+impl Rng for MockRng {
+    mock_method!(next_f64(&mut self) -> f64);
+}
+```
+
+[NEXT]
+TODO: using the mocks
+
+[NEXT]
+## Limitations
+
+* Argument and return value types must implement the `Clone` trait
+*
 
 [NEXT SECTION]
 ## 4. Pattern Matching
@@ -304,15 +357,7 @@ _note_
 
 
 [NEXT SECTION]
-## 3. Doctests
-
-_note_
-* explain what doctests are and given an example
-* discuss when you might want to use module tests vs. doctests
-
-
-[NEXT SECTION]
-## 4. Mocking
+## 5. Advanced Double Usage
 
 _note_
 * Test double definition and types of doubles
@@ -332,19 +377,15 @@ _note_
     - cover mocking `&str` values explicitly (TODO: add a helper to the lib for this?)
     - mocking methods with a generic type parameter
 
-
-[NEXT SECTION]
-## 5. Fuzz Testing
-
-_note_
-TODO: find a tool that does this in Rust and base section structure on that
+[NEXT]
+TODO
 
 
 [NEXT SECTION]
-## 6. Other Cool Things
+## 6. Rust Limitations
 
-__note_
-Add anything here you find that's cool but doesn't fit into other sections.
+[NEXT]
+TODO
 
 
 [NEXT SECTION]
