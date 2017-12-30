@@ -1,0 +1,14 @@
+[root]
+name = "example_code"
+version = "0.1.0"
+dependencies = [
+ "double 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "double"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[metadata]
+"checksum double 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "c976102a933f4bcd673fd011259738385c2ea4567fe8e96024f4d6136b4d41a7"

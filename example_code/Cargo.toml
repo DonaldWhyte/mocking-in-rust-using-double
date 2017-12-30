@@ -1,6 +1,7 @@
 [package]
-name = "example"
+name = "example_code"
 version = "0.1.0"
 authors = ["Donald Whyte <donaldwhyte0@gmail.com>"]
 
 [dependencies]
+double = "*"

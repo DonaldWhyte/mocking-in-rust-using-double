@@ -300,7 +300,7 @@ pub trait Rng {
     fn next_f64(&mut self) -> f64;
 }
 
-enum CoinFlip {
+pub enum CoinFlip {
     Heads,
     Tails,
 }
@@ -312,7 +312,7 @@ enum CoinFlip {
 TODO: compile and test
 
 ```cpp
-struct CoinFlipper {
+pub struct CoinFlipper {
     rng: Rng,
 }
 
@@ -775,6 +775,8 @@ TODO
 [NEXT]
 TODO: general takeaways of stable Rust limitations
 
+TODO: reference the mockers library
+
 
 [NEXT SECTION]
 ## Fin
@@ -783,18 +785,19 @@ TODO: general takeaways of stable Rust limitations
 TODO: conclusion
 
 [NEXT]
-<!-- .slide: class="small" -->
-### Example Code in this Talk
-https://github.com/DonaldWhyte/mocking-in-rust-using-double/tree/master/code
+## Links
 
-### Slides
-http://donsoft.io/mocking-in-rust-using-double
-
-### double Repository
-https://github.com/DonaldWhyte/double
+* double repository
+  - https://github.com/DonaldWhyte/double
+* double documentation
+  - https://docs.rs/double/0.1.5/double/
+* these slides
+  - http://donsoft.io/mocking-in-rust-using-double
+* example code from this talk
+  - https://github.com/DonaldWhyte/mocking-in-rust-using-double/tree/master/code
 
 [NEXT]
-### Get In Touch
+## Get In Touch
 
 <table class="bio-table">
   <tr>
@@ -808,8 +811,3 @@ https://github.com/DonaldWhyte/double
     </td>
   </tr>
 </table>
-
-[NEXT]
-### Sources
-
-> TODO
