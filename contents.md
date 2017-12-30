@@ -1,5 +1,4 @@
 # Mocking in Rust
-### Challenges of TODO
 
 <p>
     <a href="http://donaldwhyte.co.uk">Donald Whyte</a>
@@ -371,15 +370,271 @@ fn test_coin_flipper_yielding_heads() {
 [NEXT]
 #### GIVEN: Setting Mock Behaviour
 
-TODO
+* Define value to return for mocked method:
+  - for all calls
+  - for specific input arguments
+* Define sequence of values to return
+* Define `fn` or closure that transforms input args§
+
+_note_
+Mocks can be configured to return a single value, a sequence of values (one
+value for each call) or invoke a function/closure. Additionally, it is possible
+to make a mock return special value /invoke special functions when specific
+arguments are passed in.
+
+[NEXT]
+```rust
+pub trait ProfitForecaster {
+    fn profit_at(timestamp: u64) -> f64;
+}
+
+pub fn forecast_profit_over_time(forecaster: &ProfitForecaster,
+                                 start: u64,
+                                 end: u64) -> Vec<f64>
+{
+  (start..end)
+      .map(|t| forecaster.profit_at(t))
+      .collect()
+}
+```
+
+[NEXT]
+```
+mock_trait!(
+    MockForecaster,
+    profit_at(u64) -> f64);
+
+impl ProfitForecaster for MockForecaster {
+    mock_method!(profit_at(&self, timestamp: u64) -> f64);
+}
+```
+
+[NEXT]
+<pre><code data-noescape class="rust">fn no_return_value_specified() {
+  // GIVEN:
+  let forecaster = MockForecaster::default();
+
+  // WHEN:
+  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+
+  // THEN:
+  // default value of return type is used if no value is specified
+<mark>  assert_eq!(vec!(0, 0, 0), profit_over_time);</mark>
+}
+</code></pre>
+
+[NEXT]
+<pre><code data-noescape class="rust">fn single_return_value() {
+  // GIVEN:
+  let forecaster = MockForecaster::default();
+<mark>  forecaster.profit_at.return_value(10);</mark>
+
+  // WHEN:
+  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+
+  // THEN:
+<mark>  assert_eq!(vec!(10, 10, 10), profit_over_time);</mark>
+}
+</code></pre>
+
+[NEXT]
+<pre><code data-noescape class="rust">fn multiple_return_values() {
+  // GIVEN:
+  let forecaster = MockForecaster::default();
+<mark>  forecaster.profit_at.return_values(1, 5, 10);</mark>
+
+  // WHEN:
+  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+
+  // THEN:
+<mark>  assert_eq!(vec!(1, 5, 10), profit_over_time);</mark>
+}
+</code></pre>
+
+[NEXT]
+<pre><code data-noescape class="rust">fn return_value_for_specific_arguments() {
+  // GIVEN:
+  let forecaster = MockForecaster::default();
+<mark>  forecaster.profit_at.return_value(10);</mark>
+<mark>  forecaster.profit_at.return_value_for((1), 5);</mark>
+
+  // WHEN:
+  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+
+  // THEN:
+<mark>  assert_eq!(vec!(10, 5, 10), profit_over_time);</mark>
+}
+</code></pre>
+
+[NEXT]
+<pre><code data-noescape class="rust">fn using_closure_to_compute_return_value() {
+  // GIVEN:
+  let forecaster = MockForecaster::default();
+<mark>  forecaster.profit_at.use_closure(|t| t * 5 + 1);</mark>
+
+  // WHEN:
+  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+
+  // THEN:
+<mark>  assert_eq!(vec!(0, 6, 11), profit_over_time);</mark>
+}
+</code></pre>
+
+[NEXT]
+<pre><code data-noescape class="rust">fn using_closure_for_specific_return_value() {
+  // GIVEN:
+  let forecaster = MockForecaster::default();
+<mark>  forecaster.profit_at.return_value(10);</mark>
+<mark>  forecaster.profit_at.use_closure_for((2), |t| t * 5 + 1);</mark>
+
+  // WHEN:
+  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+
+  // THEN:
+<mark>  assert_eq!(vec!(0, 10, 11), profit_over_time);</mark>
+}
+</code></pre>
+
+[NEXT]
+Highest precedence to lowest.
+
+* Behaviour for specific input args:
+  - `use_closure_for((args), closure)`
+  - `use_fn_for((args), func)`
+  - `return_value_for((args), value)`
+* Behaviour for all input args:
+  - `use_fn(func)`
+  - `use_closure(closure)`
+  - `return_value(value)`
+* When no behaviour is set:
+  - `ReturnType::default()`
+
+[NEXT]
+#### `Option` Helpers
+
+Use `return_some` and `return_none` for `Option<T>` return values.
+
+```rust
+struct User { };
+
+pub trait UserStore {
+    fn get_user(&self, id: u64) -> Option<User>;
+}
+
+mock_trait!(
+    MockUserStore,
+    get_user(u64) -> Option<User>);
+
+impl UserStore for MockUserStore {
+    mock_method!(get_user(&self, id: u64) -> Option<User>);
+}
+```
+
+[NEXT]
+<pre><code data-noescape class="rust">fn returning_none() {
+  // GIVEN:
+  let store = MockUserStore::default();
+<mark>  store.get_user.return_none();</mark>
+
+  // WHEN:
+  let output = store.get_user(42);
+
+  // THEN:
+<mark>  assert_eq!(None, output);</mark>
+}
+</code></pre>
+
+[NEXT]
+<pre><code data-noescape class="rust">fn returning_some() {
+  // GIVEN:
+  let store = MockUserStore::default();
+<mark>  store.get_user.return_some(User{});</mark>
+
+  // WHEN:
+  let output = store.get_user(42);
+
+  // THEN:
+<mark>  assert_eq!(Some(User{}), output);</mark>
+}
+</code></pre>
+
+[NEXT]
+#### `Result` Helpers
+
+Use `return_ok` and `return_err` for `Result<T>` return values.
+
+```rust
+struct User { };
+
+pub trait UserStore {
+    fn get_user(&self, id: u64) -> Result<User, String>;
+}
+
+mock_trait!(
+    MockUserStore,
+    get_user(u64) -> Result<User, String>);
+
+impl UserStore for MockUserStore {
+    mock_method!(get_user(&self, id: u64) -> Result<User, String>);
+}
+```
+
+[NEXT]
+<pre><code data-noescape class="rust">fn returning_error() {
+  // GIVEN:
+  let store = MockUserStore::default();
+<mark>  store.get_user.return_err("could not connect to DB");</mark>
+
+  // WHEN:
+  let output = store.get_user(42);
+
+  // THEN:
+<mark>  assert_eq!(Err("could not connect to DB"), output);</mark>
+}
+</code></pre>
+
+[NEXT]
+<pre><code data-noescape class="rust">fn returning_ok() {
+  // GIVEN:
+  let store = MockUserStore::default();
+<mark>  store.get_user.return_ok(User{});</mark>
+
+  // WHEN:
+  let output = store.get_user(42);
+
+  // THEN:
+<mark>  assert_eq!(Ok(User{}), output);</mark>
+}
+</code></pre>
 
 [NEXT]
 #### THEN: Asserting Mock Was Used in the Expected Way
 
-TODO
+* TODO
 
 [NEXT]
-## Limitations
+TODO
+
+
+[NEXT SECTION]
+## 4. Pattern Matching
+
+TODO
+
+
+[NEXT SECTION]
+## 5. Rust Limitations
+
+[NEXT]
+TODO: mention that the vision for this library that this must be usable in `stable`
+
+TODO: there exist many other mocking libraries that use nightly compiler plugins
+
+TODO: this makes supporting some features difficutl
+
+
+[NEXT]
+### `double` Limitations
 
 * Argument/return value types must implement these traits:
   - `Clone`
@@ -388,76 +643,28 @@ TODO
   - `Hash`
 * Return value type must also implement:
   - `Default`
+* Only `pub trait`s can be mocked
 
 _note_
 TODO: add explanation in notes for why each is implemented
 
 [NEXT]
-## `&str` Arguments
+### `&str` Arguments
 
 TODO
 
 [NEXT]
-## Generic Type Arguments
-
-TODO
-
-
-[NEXT SECTION]
-## 5. Additional Double Usage
-
-_note_
-More advanced features like;
-
-- mutable and immutable functions
-- exactly call matching
-- "has call" matching
-- unordered calls
-- setting action as return value
-    - single call
-    - multiple calls
-- setting action as closure
-- has examples for return helpers (some/none/err)
-
-[NEXT]
-### TODO
-
-[NEXT]
-### Using double Mocks for Free Functions
+### Generic Type Arguments
 
 TODO
 
 [NEXT]
-### `Option` Helper
+### Methods that Return References
 
 TODO
 
 [NEXT]
-### `Result` Helper
-
-TODO
-
-
-[NEXT]
-### Pattern Matching
-
-TODO: more complex examples that require pattern matching
-
-
-[NEXT SECTION]
-## 6. Rust Limitations
-
-[NEXT]
-TODO: mention that the vision for this library that this must be usable in `stable`
-
-TODO: there exist many other mocking libraries that use nightly compiler plugins
-
-TODO: this makes
-
-[NEXT]
-TODO: limitations of using stable
-
-TODO: how I got around those limitations
+TODO: general takeaways of stable Rust limitations
 
 
 [NEXT SECTION]

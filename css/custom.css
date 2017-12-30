@@ -36,10 +36,12 @@ code {
     line-height: 18px;
 }
 
-.small-table td {
-    border: 0px;
-    font-size: 24px;
-    margin: 0px;
+.small-table-text td, .small-table-text th {
+    font-size: 20px;
+}
+
+.medium-table-text td, .medium-table-text th {
+    font-size: 26px;
 }
 
 .bio-table td {
@@ -50,6 +52,19 @@ code {
 
 .github {
     font-size: 26px !important;
+}
+
+/* For highlighting specific lines in code formatted using hljs */
+code mark {
+    display: inline-block;
+    width: 100%;
+    background: yellow;
+    color: black;
+}
+
+code mark span {
+    background: none !important;
+    color: inherit !important;
 }
 
 /* Images */
