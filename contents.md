@@ -89,10 +89,83 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured
 ```
 
 [NEXT]
-TODO: concrete test example with GIVEN/WHEN/THEN
+Write unit tests for a module by defining a private `tests` module in its source file.
+
+Annotate module so it's only built with `cargo test`.
+
+`src/foo.rs`:
+
+```rust
+// production code
+pub fn add_two(num: i32) -> i32 {
+    num + 2
+}
+
+// annotate module with this to ensure this code is not built
+// into the production binary
+#[cfg(test)]
+mod tests {
+    // test code in here
+}
+```
 
 [NEXT]
-TODO: doc tests?
+Add test functions to private `tests` module.
+
+Each function is a separate, isolated test.
+
+```rust
+// ...prod code...
+
+#[cfg(test)]
+mod tests {
+    use super::*;  // import production symbols from parent module
+
+    // Annotate functions with `#[test]` so they're execute by `cargo test`
+    #[test]
+    fn ensure_two_is_added_to_negative() {
+        assert_eq!(0, add_two(-2));
+    }
+    #[test]
+    fn ensure_two_is_added_to_zero() {
+        assert_eq!(2, add_two(0));
+    }
+    #[test]
+    fn ensure_two_is_added_to_positive() {
+        assert_eq!(3, add_two(1));
+    }
+}
+```
+<!-- .element class="medium" -->
+
+[NEXT]
+```bash
+dwhyte-mbp2:some_lib donaldwhyte$ cargo test
+    Finished dev [unoptimized + debuginfo] target(s) in 0.0 secs
+     Running target/debug/deps/some_lib-4ea7f66796617175
+
+running 3 tests
+test tests::ensure_two_is_added_to_negative ... ok
+test tests::ensure_two_is_added_to_positive ... ok
+test tests::ensure_two_is_added_to_zero ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured
+
+   Doc-tests some_lib
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured
+```
+
+[NEXT]
+Rust has native support for:
+
+* documentation tests
+* integration tests
+
+Focus of talk is mocking, so these are not covered here.
+
 
 [NEXT SECTION]
 ## 2. Why Mock?
@@ -610,10 +683,46 @@ impl UserStore for MockUserStore {
 [NEXT]
 #### THEN: Asserting Mock Was Used in the Expected Way
 
-* TODO
+Verify mocks are called the right number of times and with the right arguments.
 
 [NEXT]
-TODO
+<pre><code data-noescape class="rust">fn asserting_mock_was_called() {
+  // GIVEN:
+  let forecaster = MockForecaster::default();
+
+  // WHEN:
+  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+
+  // THEN:
+  // called at least once
+<mark>  assert!(forecaster.profit_at.called());</mark>
+  // called with argument 1 at least once
+<mark>  assert!(forecaster.profit_at.called_with((1));</mark>
+  // called at least once with argument 1 and 0
+<mark>  assert!(forecaster.profit_at.has_calls((1), (0));</mark>
+}
+</code></pre>
+
+[NEXT]
+<pre class="medium"><code data-noescape class="rust">fn asserting_mock_was_called_with_precise_constraints() {
+  // GIVEN:
+  let forecaster = MockForecaster::default();
+
+  // WHEN:
+  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+
+  // THEN:
+  // called at least once with argument 0 and 1, in that order
+<mark>  assert!(forecaster.profit_at.has_calls_in_order((0), (1));</mark>
+  // called exactly three times, once with 0, once with 1 and once with 2
+<mark>  assert!(forecaster.profit_at.has_calls_exactly(</mark>
+<mark>      (1), (0), (2));</mark>
+  // called exactly three times, once with 0, once with 1 and once with 2,
+  // and the calls were made in the specified order
+<mark>  assert!(forecaster.profit_at.has_calls_exactly_in_order(</mark>
+<mark>      (0), (1), (2));</mark>
+}
+</code></pre>
 
 
 [NEXT SECTION]
