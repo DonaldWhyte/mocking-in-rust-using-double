@@ -91,38 +91,30 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured
 [NEXT]
 Write unit tests for a module by defining a private `tests` module in its source file.
 
-Annotate module so it's only built with `cargo test`.
-
-`src/foo.rs`:
-
-```rust
-// production code
+<pre><code data-noescape class="rust">// production code
 pub fn add_two(num: i32) -> i32 {
     num + 2
 }
 
-// annotate module with this to ensure this code is not built
-// into the production binary
-#[cfg(test)]
-mod tests {
-    // test code in here
-}
-```
+<mark>#[cfg(test)]</mark>
+<mark>mod tests {</mark>
+<mark>    // test code in here</mark>
+<mark>}</mark>
+</code></pre>
+
+_note_
+Annotate module so it's only built with `cargo test`.
 
 [NEXT]
-Add test functions to private `tests` module.
+Add isolated test functions to private `tests` module.
 
-Each function is a separate, isolated test.
-
-```rust
-// ...prod code...
+<pre class="medium"><code data-noescape class="rust">// ...prod code...
 
 #[cfg(test)]
 mod tests {
     use super::*;  // import production symbols from parent module
 
-    // Annotate functions with `#[test]` so they're execute by `cargo test`
-    #[test]
+<mark>    #[test]</mark>
     fn ensure_two_is_added_to_negative() {
         assert_eq!(0, add_two(-2));
     }
@@ -135,11 +127,13 @@ mod tests {
         assert_eq!(3, add_two(1));
     }
 }
-```
-<!-- .element class="medium" -->
+</code></pre>
+
+_note_
+Emphasise the fact that each function is a separate, isolated test.
 
 [NEXT]
-```bash
+```
 dwhyte-mbp2:some_lib donaldwhyte$ cargo test
     Finished dev [unoptimized + debuginfo] target(s) in 0.0 secs
      Running target/debug/deps/some_lib-4ea7f66796617175
@@ -216,15 +210,23 @@ the real, concrete dependencies are changed (this is a good and bad thing).
 [NEXT]
 ## What to Eliminate
 
-Anything non-deterministic that can't be reliably controlled within a unit test
+Anything non-deterministic that can't be reliably controlled within a unit test.
 
-* External data sources (e.g. files, databases)
-* Network connections (e.g. services)
-* External code dependencies (libraries)
-* Internal code dependencies
-    * simpler test code
-    * makes individual tests less brittle
-    * downsides to eliminating these dependencies
+[NEXT]
+**External data sources** &mdash; files, databases
+
+**Network connections** &mdash; services
+
+**External code dependencies** &mdash; libraries
+
+[NEXT]
+### You Might Also Want to Eliminate
+
+**Heavyweight internal code dependencies.**
+
+* simpler test code
+* makes individual tests less brittle
+* downsides to eliminating these dependencies
 
 _note_
 Downsides to testing internal code dependencies:
@@ -250,9 +252,12 @@ they:
 
 ![stunt_double](images/brad_double_small.jpg)
 
-* A **test double** is an object or function substituted for a "real" (production ready) object during testing.
-* Should appear exactly the same as a "real" production instance to its clients (collaborators).
-* Term originates from a notion of a _"stunt double"_ in films
+[NEXT]
+A **test double** is an object or function substituted for a "real" (production ready) object during testing.
+
+Should appear exactly the same as a **"real"** production instance to its clients (collaborators).
+
+Term originates from a notion of a _"stunt double"_ in films.
 
 _note_
 This is *how* we eliminate these unwanted dependencies from our tests.
@@ -270,7 +275,7 @@ stunts are performed by a different actor.
     * both a stub and a spy
 
 [NEXT]
-**Mocks** are the focus of this talk
+**Mocks** are the focus of this talk.
 
 _note_
 WHY? Mocks are the most flexible. They're a superset of stubs and spies.
@@ -309,9 +314,7 @@ pub enum CoinFlip {
 [NEXT]
 ## Implementation
 
-TODO: compile and test
-
-```cpp
+```rust
 pub struct CoinFlipper {
     rng: Rng,
 }
@@ -333,12 +336,14 @@ impl CoinFlipper {
     }
 }
 ```
-<!-- .element class="small" -->
+<!-- .element class="medium" -->
 
 [NEXT]
 ## Playing the Game
 
-```cpp
+`flip` is either `Heads` or `Tails`.
+
+```rust
 fn play() {
     // Construct a particular RNG implementation
     let rng = SomeRngImplementation();
@@ -356,8 +361,6 @@ fn play() {
 }
 ```
 
-`flip` is either `Heads` or `Tails`
-
 [NEXT]
 ![coin_flip_collaborators](images/coin-flip-collaborators.png)
 
@@ -366,19 +369,36 @@ fn play() {
 * We want to test `CoinFlipper` produces both results
   - we also want these tests to be repeatable
   - without relying on an external environment
-* Have to mock `Rng`
+
+[NEXT]
+<!-- .slide: class="large-slide" -->
+**Let's mock `Rng`.**
 
 [NEXT]
 ## Double to the Rescue!
 
-* create mock trait implementations using simple macros
-* rich set of **matchers**
-* TODO: other good stuff
+* **generate** mock trait implementations using macros
+* flexible configuration of mock's **behaviour**
+* can make simple and complex **assertions** on mock calls
+* **pattern matching** for call arguments
+
+[NEXT]
+<!-- .slide: class="large-slide" -->
+**Supports Rust stable!**
+
+_note_
+TODO: write some notes about how to emphasise how this feature/goal has been a
+heavy influence on the design of the library.
+
+TODO: mention quick stat about mock libs I know that support stable (hopefully none)
 
 [NEXT]
 ## Defining Mock Collaborators
 
-Generate mock `struct`:
+TODO: image on this screen
+
+[NEXT]
+**`mock_trait!`**
 
 ```rust
 mock_trait!(
@@ -389,42 +409,81 @@ mock_trait!(
     methodN_name(arg1_type, ..., argM_type) -> return_type);
 ```
 
+[NEXT]
+**`mock_trait!`**
+
+<pre><code data-noescape class="rust">pub trait Rng {
+    fn next_f64(&mut self) -> f64;
+}
+
+<mark>mock_trait!(</mark>
+<mark>    MockRng,</mark>
+<mark>    next_f64() -> f64);</mark>
+</code></pre>
+
+[NEXT]
+**`mock_method!`**
+
+Generate implementations of all methods in mock `struct`.
+
+```
+impl TraitToMock for NameOfMockStruct {
+
+  mock_method!(
+    method1_name(&self, arg1_type, ..., argM_type) -> return_type);
+
+  mock_method!(
+    method2_name(&mut self, arg1_type, ..., argM_type) -> return_type);
+
+  ...
+
+  mock_method!(
+    methodN_name(&mut self, arg1_type, ..., argM_type) -> return_type);
+
+}
+```
+<!-- .element class="medium-large" -->
+
+[NEXT]
+**`mock_method!`**
+
+<pre><code data-noescape class="rust">pub trait Rng {
+    fn next_f64(&mut self) -> f64;
+}
+
+mock_trait!(
+    MockRng,
+    next_f64() -> f64);
+
+<mark>impl Rng for MockRng {</mark>
+<mark>    mock_method!(next_f64(&mut self) -> f64);</mark>
+<mark>}</mark>
+</code></pre>
+
+[NEXT]
+Full code to generate a mock implementation of a `trait`:
+
 ```rust
 mock_trait!(
     MockRng,
     next_f64() -> f64);
-```
 
-[NEXT]
-## Defining Mock Collaborators
-
-Generate implementations of all methods in mock `struct`:
-
-```
-impl TraitToMock for NameOfMockStruct {
-  mock_method!(method1_name(&self, arg1_type, ..., argM_type) -> return_type);
-  mock_method!(method2_name(&mut self, arg1_type, ..., argM_type) -> return_type);
-  ...
-  mock_method!(methodN_name(&mut self, arg1_type, ..., argM_type) -> return_type);
-}
-```
-<!-- .element class="small" -->
-
-```
 impl Rng for MockRng {
     mock_method!(next_f64(&mut self) -> f64);
 }
 ```
 
+_note_
+Emphasise this is the only boilerplate needed.
+
 [NEXT]
 ## Using Generated Mocks in Tests
 
-```rust
-#[test]
+<pre class="medium"><code data-noescape class="rust">#[test]
 fn test_coin_flipper_yielding_heads() {
     // GIVEN:
-    let rng = MockRng::default();
-    rng.next_f64.return_value(0.25);
+<mark>    let rng = MockRng::default();</mark>
+<mark>    rng.next_f64.return_value(0.25);</mark>
 
     // WHEN:
     let mut game = CoinFlipper::new(rng);
@@ -433,21 +492,20 @@ fn test_coin_flipper_yielding_heads() {
     // THEN:
     assert_eq!(CoinFlip::Heads, flip);
 
-    assert!(rng.next_f64.called());
-    assert!(rng.next_f64.called_with(()));
-    assert_eq!(1, rng.next_f64.num_calls());
+<mark>    assert!(rng.next_f64.called());</mark>
+<mark>    assert!(rng.next_f64.called_with(()));</mark>
+<mark>    assert_eq!(1, rng.next_f64.num_calls());</mark>
 }
-```
-<!-- .element class="medium" -->
+</code></pre>
 
 [NEXT]
-#### GIVEN: Setting Mock Behaviour
+### GIVEN: Setting Mock Behaviour
 
 * Define value to return for mocked method:
   - for all calls
   - for specific input arguments
 * Define sequence of values to return
-* Define `fn` or closure that transforms input args§
+* Define `fn` or closure that transforms input args
 
 _note_
 Mocks can be configured to return a single value, a sequence of values (one
@@ -483,7 +541,8 @@ impl ProfitForecaster for MockForecaster {
 ```
 
 [NEXT]
-<pre><code data-noescape class="rust">fn no_return_value_specified() {
+<pre><code data-noescape class="rust">#[test]
+fn no_return_value_specified() {
   // GIVEN:
   let forecaster = MockForecaster::default();
 
@@ -497,7 +556,8 @@ impl ProfitForecaster for MockForecaster {
 </code></pre>
 
 [NEXT]
-<pre><code data-noescape class="rust">fn single_return_value() {
+<pre><code data-noescape class="rust">#[test]
+fn single_return_value() {
   // GIVEN:
   let forecaster = MockForecaster::default();
 <mark>  forecaster.profit_at.return_value(10);</mark>
@@ -511,7 +571,8 @@ impl ProfitForecaster for MockForecaster {
 </code></pre>
 
 [NEXT]
-<pre><code data-noescape class="rust">fn multiple_return_values() {
+<pre><code data-noescape class="rust">#[test]
+fn multiple_return_values() {
   // GIVEN:
   let forecaster = MockForecaster::default();
 <mark>  forecaster.profit_at.return_values(1, 5, 10);</mark>
@@ -525,7 +586,8 @@ impl ProfitForecaster for MockForecaster {
 </code></pre>
 
 [NEXT]
-<pre><code data-noescape class="rust">fn return_value_for_specific_arguments() {
+<pre><code data-noescape class="rust">#[test]
+fn return_value_for_specific_arguments() {
   // GIVEN:
   let forecaster = MockForecaster::default();
 <mark>  forecaster.profit_at.return_value(10);</mark>
@@ -540,7 +602,8 @@ impl ProfitForecaster for MockForecaster {
 </code></pre>
 
 [NEXT]
-<pre><code data-noescape class="rust">fn using_closure_to_compute_return_value() {
+<pre><code data-noescape class="rust">#[test]
+fn using_closure_to_compute_return_value() {
   // GIVEN:
   let forecaster = MockForecaster::default();
 <mark>  forecaster.profit_at.use_closure(|t| t * 5 + 1);</mark>
@@ -554,7 +617,8 @@ impl ProfitForecaster for MockForecaster {
 </code></pre>
 
 [NEXT]
-<pre><code data-noescape class="rust">fn using_closure_for_specific_return_value() {
+<pre><code data-noescape class="rust">#[test]
+fn using_closure_for_specific_return_value() {
   // GIVEN:
   let forecaster = MockForecaster::default();
 <mark>  forecaster.profit_at.return_value(10);</mark>
@@ -569,7 +633,10 @@ impl ProfitForecaster for MockForecaster {
 </code></pre>
 
 [NEXT]
-Highest precedence to lowest.
+<!-- .slide: class="small-slide" -->
+#### Precedence Order
+
+Top = highest, bottom = lowest.
 
 * Behaviour for specific input args:
   - `use_closure_for((args), closure)`
@@ -583,9 +650,9 @@ Highest precedence to lowest.
   - `ReturnType::default()`
 
 [NEXT]
-#### `Option` Helpers
+### `Option` Helpers
 
-Use `return_some` and `return_none` for `Option<T>` return values.
+Use `return_some` and `return_none` for `Option<T>`.
 
 ```rust
 struct User { };
@@ -604,7 +671,8 @@ impl UserStore for MockUserStore {
 ```
 
 [NEXT]
-<pre><code data-noescape class="rust">fn returning_none() {
+<pre><code data-noescape class="rust">#[test]
+fn returning_none() {
   // GIVEN:
   let store = MockUserStore::default();
 <mark>  store.get_user.return_none();</mark>
@@ -618,7 +686,8 @@ impl UserStore for MockUserStore {
 </code></pre>
 
 [NEXT]
-<pre><code data-noescape class="rust">fn returning_some() {
+<pre><code data-noescape class="rust">#[test]
+fn returning_some() {
   // GIVEN:
   let store = MockUserStore::default();
 <mark>  store.get_user.return_some(User{});</mark>
@@ -632,9 +701,9 @@ impl UserStore for MockUserStore {
 </code></pre>
 
 [NEXT]
-#### `Result` Helpers
+### `Result` Helpers
 
-Use `return_ok` and `return_err` for `Result<T>` return values.
+Use `return_ok` and `return_err` for `Result<T>`.
 
 ```rust
 struct User { };
@@ -653,7 +722,8 @@ impl UserStore for MockUserStore {
 ```
 
 [NEXT]
-<pre><code data-noescape class="rust">fn returning_error() {
+<pre><code data-noescape class="rust">#[test]
+fn returning_error() {
   // GIVEN:
   let store = MockUserStore::default();
 <mark>  store.get_user.return_err("could not connect to DB");</mark>
@@ -667,7 +737,8 @@ impl UserStore for MockUserStore {
 </code></pre>
 
 [NEXT]
-<pre><code data-noescape class="rust">fn returning_ok() {
+<pre><code data-noescape class="rust">#[test]
+fn returning_ok() {
   // GIVEN:
   let store = MockUserStore::default();
 <mark>  store.get_user.return_ok(User{});</mark>
@@ -681,12 +752,13 @@ impl UserStore for MockUserStore {
 </code></pre>
 
 [NEXT]
-#### THEN: Asserting Mock Was Used in the Expected Way
+### THEN: Asserting Mock Was Used in the Expected Way
 
 Verify mocks are called the right number of times and with the right arguments.
 
 [NEXT]
-<pre><code data-noescape class="rust">fn asserting_mock_was_called() {
+<pre><code data-noescape class="rust">#[test]
+fn asserting_mock_was_called() {
   // GIVEN:
   let forecaster = MockForecaster::default();
 
@@ -704,7 +776,8 @@ Verify mocks are called the right number of times and with the right arguments.
 </code></pre>
 
 [NEXT]
-<pre class="medium"><code data-noescape class="rust">fn asserting_mock_was_called_with_precise_constraints() {
+<pre class="medium"><code data-noescape class="rust">#[test]
+fn asserting_mock_was_called_with_precise_constraints() {
   // GIVEN:
   let forecaster = MockForecaster::default();
 
@@ -732,14 +805,14 @@ TODO
 
 
 [NEXT SECTION]
-## 5. Rust Limitations
+## 5. Limitations
 
 [NEXT]
 TODO: mention that the vision for this library that this must be usable in `stable`
 
 TODO: there exist many other mocking libraries that use nightly compiler plugins
 
-TODO: this makes supporting some features difficutl
+TODO: this makes supporting some features difficult
 
 
 [NEXT]
@@ -750,8 +823,6 @@ TODO: this makes supporting some features difficutl
   - `Debug`
   - `Eq`
   - `Hash`
-* Return value type must also implement:
-  - `Default`
 * Only `pub trait`s can be mocked
 
 _note_
@@ -775,7 +846,9 @@ TODO
 [NEXT]
 TODO: general takeaways of stable Rust limitations
 
-TODO: reference the mockers library
+TODO: reference the following libs: mockers, mock-derive, mock_me, mocktopus
+  ^--- list how many support stable! arguments against the ones that use stable
+  ^--- see what features limit nightly libs
 
 
 [NEXT SECTION]
@@ -790,7 +863,7 @@ TODO: conclusion
 * double repository
   - https://github.com/DonaldWhyte/double
 * double documentation
-  - https://docs.rs/double/0.1.5/double/
+  - https://docs.rs/double/0.2.0/double/
 * these slides
   - http://donsoft.io/mocking-in-rust-using-double
 * example code from this talk

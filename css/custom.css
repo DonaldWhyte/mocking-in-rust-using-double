@@ -27,6 +27,11 @@ code {
     line-height: 20px;
 }
 
+.medium-large code {
+    font-size: 20px;
+    line-height: 22px;
+}
+
 .small p {
     font-size: 36px;
 }
@@ -52,6 +57,21 @@ code {
 
 .github {
     font-size: 26px !important;
+}
+
+/* Slide-wide styles. */
+.small-slide p,
+.small-slide ul,
+.small-slide li
+{
+    font-size: 32px !important;
+}
+
+.large-slide p,
+.large-slide ul,
+.large-slide li
+{
+    font-size: 60px !important;
 }
 
 /* For highlighting specific lines in code formatted using hljs */
