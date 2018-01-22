@@ -105,3 +105,8 @@ img[alt="coin_flip"] {
 img[alt="coin_flip_collaborators"] {
     width: 450px;
 }
+
+img[alt="robot"] {
+    width: 300px;
+    float: right;
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="564px" height="471px" viewBox="0 0 564 471" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 48.2 (47327) - http://www.bohemiancoding.com/sketch -->
+    <title>Group</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group">
+            <path d="M242.2,430.2 C367.4,449.5 457,312.8 457,193 C457,73 344.4,0 215,0 C86,0 -23,95.4 4.3,203 C31.3,310.4 117.1,410.8 242.3,430.2 L242.2,430.2 Z" id="Shape" fill="#D3D3D3"></path>
+            <text id="All-Possible-Behavio" font-family="PTMono-Bold, PT Mono" font-size="30" font-weight="bold" fill="#000000">
+                <tspan x="31" y="470">All Possible Behaviour</tspan>
+            </text>
+            <path d="M220.284981,295.195007 C281.369319,304.611362 325.084628,237.916243 325.084628,179.466533 C325.084628,120.919244 270.147756,85.3029767 207.014263,85.3029767 C144.075927,85.3029767 90.8954733,131.848071 104.214981,184.345474 C117.388121,236.745297 159.249433,285.729862 220.333771,295.195007 L220.284981,295.195007 Z" id="Shape" fill="#858585" transform="translate(213.618880, 190.696392) rotate(114.000000) translate(-213.618880, -190.696392) "></path>
+            <path d="M219.358965,229.41122 C243.587162,232.578682 260.926191,210.14386 260.926191,190.482618 C260.926191,170.788554 239.136295,158.807997 214.095332,158.807997 C189.131774,158.807997 168.038536,174.464779 173.321521,192.123791 C178.546452,209.749979 195.15012,226.227346 219.378317,229.41122 L219.358965,229.41122 Z" id="Shape" fill="#000000" transform="translate(216.714955, 194.260105) rotate(172.000000) translate(-216.714955, -194.260105) "></path>
+            <text id="Expected" font-family="PTMono-Bold, PT Mono" font-size="30" font-weight="bold" fill="#000000">
+                <tspan x="420" y="57">Expected</tspan>
+            </text>
+            <text id="Asserted" font-family="PTMono-Bold, PT Mono" font-size="30" font-weight="bold" fill="#000000">
+                <tspan x="24" y="176">Asserted</tspan>
+            </text>
+        </g>
+    </g>
+</svg>

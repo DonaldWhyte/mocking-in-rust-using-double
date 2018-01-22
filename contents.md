@@ -24,8 +24,7 @@
 2. Why Mock?
 3. Mocking in Rust with `double`
 4. Pattern Matching
-5. Advanced `double` Features
-6. Rust Limitations
+5. Limitations
 
 
 [NEXT SECTION]
@@ -382,15 +381,35 @@ fn play() {
 * can make simple and complex **assertions** on mock calls
 * **pattern matching** for call arguments
 
+
 [NEXT]
 <!-- .slide: class="large-slide" -->
-**Supports Rust stable!**
+**Rust Stable First**
 
 _note_
-TODO: write some notes about how to emphasise how this feature/goal has been a
-heavy influence on the design of the library.
+Emphasise how these goals has had the biggest influence on the design of the
+library. It's at the core of the library and what differentiates it from other
+mocking libraries in Rust.
 
-TODO: mention quick stat about mock libs I know that support stable (hopefully none)
+Other Mocking Libraries
+
+Supports rust stable via code generation and less features:
+  - https://github.com/kriomant/mockers
+
+Supports Rust stable, but lots of code boilerplate and less features:
+  - https://github.com/iredelmeier/pseudo
+
+Require changing prod code (and thus, can't be used for external `traits`) and require nightly:
+  - https://github.com/craftytrickster/mock_me
+  - https://github.com/DavidDeSimone/mock_derive
+  - https://github.com/CodeSandwich/Mocktopus
+  - https://github.com/mindsbackyard/galvanic-mock
+
+
+[NEXT]
+<!-- .slide: class="large-slide" -->
+**Production Code Does Not Need to Change**
+
 
 [NEXT]
 ## Defining Mock Collaborators
@@ -797,12 +816,288 @@ fn asserting_mock_was_called_with_precise_constraints() {
 }
 </code></pre>
 
+[NEXT]
+### Generic Type Arguments
+
+TODO
+
+[NEXT]
+### Methods that Return References
+
+TODO
+
 
 [NEXT SECTION]
 ## 4. Pattern Matching
 
-TODO
+![pattern_matching](images/pattern_matching.jpg)
 
+_note_
+When a mock function has been used in a test, we typically want to make assertions about what the mock has been called with.
+
+[NEXT]
+```rust
+#[test]
+fn test_the_robot() {
+    let robot = MockRobot::default();
+    test_complex_business_logic_that_makes_decisions(&robot);
+    assert!(robot.move_forward.called_with(100));
+}
+```
+
+_note_
+For example, suppose we're testing some logic that determines the next action of a robot. We might want to assert what this logic told the robot to do.
+
+[NEXT]
+Do we really care that the robot moved **_exactly_** 100 units?
+
+_note_
+Sometimes you might not want to be this specific. This can make tests being too rigid. Over specification leads to brittle tests and obscures the intent of tests. Therefore, it is encouraged to specify only what's necessary &mdash; no more, no less.
+
+[NEXT]
+![behaviour_space](images/behaviour_space1.svg)
+
+[NEXT]
+![behaviour_space](images/behaviour_space2.svg)
+
+[NEXT]
+![behaviour_space](images/behaviour_space3.svg)
+
+[NEXT]
+TODO: intro patterns
+
+[NEXT]
+<pre><code data-noescape class="rust"><mark>use double::matcher::*;</mark>
+
+#[test]
+fn test_the_robot() {
+    let robot = MockRobot::default();
+    test_complex_business_logic_that_makes_decisions(&robot);
+<mark>    assert!(robot.move_forward.called_with_pattern(p!(ge, 100)));</mark>
+}
+</code></pre>
+
+[NEXT]
+```rust
+assert!(robot.move.called_with_pattern(
+    matcher!( p!(ge, 100), p!(eq, Direction::Left) )
+));
+```
+
+[NEXT]
+```rust
+assert!(robot.move_forward.called_with_pattern(
+    matcher!(
+        p!(all_of, vec!(
+            p!(ge, 100),
+            p!(le, 200))))
+));
+```
+
+_note_
+ This reads:
+     * first arg should be >= 100
+     * second arg should be `Direction::Left`
+
+[NEXT]
+### Custom Matchers
+
+_note_
+If none of the built-in matchers fit your use case, you can define your own.
+
+[NEXT]
+TODO: scenario
+
+_note_
+Suppose we were testing a restful service. We have some request handling logic. We want to test the handling logic responded to the request correctly. In this context, "correctly" means it responded with a JSON object that contains the "time" key.
+
+[NEXT]
+```rust
+trait ResponseSender {
+    fn send_response(&mut self, response: &str);
+}
+
+fn request_handler(response_sender: &mut ResponseSender) {
+    // ...
+    // business logic here...
+    // ...
+    response_sender.send_response(
+        "{ \"current_time\": \"2017-06-10 20:30:00\" }");
+}
+```
+
+[NEXT]
+Step 1: Mock the relevant `trait`
+
+```rust
+mock_trait!(
+    MockResponseSender,
+    send_response(&str) -> ());
+impl ResponseSender for MockResponseSender {
+    mock_method!(send_response(&mut self, response: &str));
+}
+```
+
+[NEXT]
+Step 2: write the test
+
+```rust
+#[test]
+fn ensure_current_time_field_is_returned() {
+    // GIVEN:
+    let mut mock_sender = MockResponseSender::default();
+
+    // WHEN:
+    request_handler(&mock_sender);
+
+    // THEN:
+    // check the sender received a response that contains a current_time field
+}
+```
+
+[NEXT]
+TODO: how do we test?
+
+[NEXT]
+TODO: could do...write the code!
+
+[NEXT]
+```rust
+extern crate json;
+use self::json;
+
+fn is_json_object_with_key(arg: &str, key: &str) -> bool {
+    match json::parse(str) {
+        Ok(json_value) => match json_value {
+            Object(object) => match object.get(key) {
+                Some(_) => true  // JSON object that contains key
+                None => false    // JSON object that does contain key
+            },
+            _ => false  // not a object (must be another JSON type)
+        },
+        Err(_) => false  // not valid JSON
+    }
+}
+```
+
+[NEXT]
+```rust
+fn ensure_current_time_field_is_returned() {
+    // GIVEN:
+    let mut mock_sender = MockResponseSender::default();
+
+    // WHEN:
+    request_handler(&mock_sender);
+
+    // THEN:
+    // we expect a "time" field to be in the response JSON
+    assert(response_sender.send_response.called_with_pattern(
+        p!(is_json_object_with_key, "time")
+    ));
+    // we DO NOT expect a "time" field to be in the response JSON
+    assert(!response_sender.send_response.called_with_pattern(
+        p!(is_json_object_with_key, "records")
+    ));
+}
+```
+
+_note_
+Using the matcher then requires binding it to a parameter (using `p!`) and passing it to a mock assertion method.
+
+[NEXT]
+TODO: intro to robot problem
+
+![robot](images/robot.jpg)
+
+[NEXT]
+```
+WorldState -> Brain -> Actuator
+```
+
+(WorldState as perceived by the robot)
+
+[NEXT]
+```rust
+pub struct WorldState {
+    ...
+}
+```
+
+[NEXT]
+```rust
+enum Action {
+    // TODO
+    ...
+};
+
+pub trait Actuator {
+    fn run_actions(&self, state: WorldState) -> WorldState;
+}
+```
+
+[NEXT]
+```rust
+pub struct Brain {
+    // Contains various state that the brain uses to make decisions
+    // e.g. memory of what's happened in the past
+}
+
+impl Brain {
+    fn decide_actions(&mut self,
+                      state: &WorldState) -> Vec<Actions>
+    {
+        // TODO: comment what's here
+    }
+}
+```
+
+[NEXT]
+```rust
+fn run_time_step(brain: &mut Brain,
+                 actuator: &Actuator,
+                 state: WorldState) -> WorldState
+{
+    let actions = brain.decide_actions(state);
+    actuator.run_actions(actions)
+}
+```
+
+[NEXT]
+### Code Under Test
+
+TODO: diagram with `Brain` and `run_time_step` highlighted
+
+[NEXT]
+### Code Being Mocked
+
+TODO: diagram with `Actuator` highlighted
+
+[NEXT]
+```rust
+mock_trait!(
+    MockActuator,
+    run_actions(WorldState) -> WorldState);
+
+impl Actuator for MockActuator {
+    mock_method!(run_actions(&self, state: WorldState) -> WorldState);
+}
+```
+
+[NEXT]
+```rust
+#[test]
+fn TODO {
+    let state = WorldState { ... };
+    let brain = Brain::new()
+}
+```
+
+[NEXT]
+### Custom Matchers
+
+TODO: add if have time
+
+TODO: make a custom matcher for the actions case
 
 [NEXT SECTION]
 ## 5. Limitations
@@ -826,21 +1121,6 @@ TODO: this makes supporting some features difficult
 * Only `pub trait`s can be mocked
 
 _note_
-TODO: add explanation in notes for why each is implemented
-
-[NEXT]
-### `&str` Arguments
-
-TODO
-
-[NEXT]
-### Generic Type Arguments
-
-TODO
-
-[NEXT]
-### Methods that Return References
-
 TODO
 
 [NEXT]
