@@ -408,7 +408,7 @@ Require changing prod code (and thus, can't be used for external `traits`) and r
 
 [NEXT]
 <!-- .slide: class="large-slide" -->
-**Production Code Does Not Need to Change**
+**No Changes to Production Code**
 
 
 [NEXT]
@@ -855,13 +855,29 @@ _note_
 Sometimes you might not want to be this specific. This can make tests being too rigid. Over specification leads to brittle tests and obscures the intent of tests. Therefore, it is encouraged to specify only what's necessary &mdash; no more, no less.
 
 [NEXT]
-![behaviour_space](images/behaviour_space1.svg)
+<div class="behaviour_space_wrapper">
+  ![behaviour_space](images/behaviour_space1.svg)
+</div>
 
 [NEXT]
-![behaviour_space](images/behaviour_space2.svg)
+<div class="behaviour_space_wrapper">
+  ![behaviour_space](images/behaviour_space2.svg)
+</div>
 
 [NEXT]
-![behaviour_space](images/behaviour_space3.svg)
+<div class="behaviour_space_wrapper">
+  ![behaviour_space](images/behaviour_space3.svg)
+</div>
+
+[NEXT]
+<div class="behaviour_space_wrapper">
+  ![behaviour_space](images/behaviour_space4.svg)
+</div>
+
+[NEXT]
+<div class="behaviour_space_wrapper">
+  ![behaviour_space](images/behaviour_space5.svg)
+</div>
 
 [NEXT]
 TODO: intro patterns
@@ -1093,6 +1109,11 @@ fn TODO {
 ```
 
 [NEXT]
+### More Examples
+
+TODO
+
+[NEXT]
 ### Custom Matchers
 
 TODO: add if have time
@@ -1100,6 +1121,7 @@ TODO: add if have time
 TODO: make a custom matcher for the actions case
 
 [NEXT SECTION]
+
 ## 5. Limitations
 
 [NEXT]
@@ -1111,7 +1133,7 @@ TODO: this makes supporting some features difficult
 
 
 [NEXT]
-### `double` Limitations
+### Type Limitations
 
 * Argument/return value types must implement these traits:
   - `Clone`

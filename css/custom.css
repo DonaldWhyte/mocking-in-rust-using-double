@@ -110,3 +110,11 @@ img[alt="robot"] {
     width: 300px;
     float: right;
 }
+
+.behaviour_space_wrapper {
+    float: left;
+}
+
+img[alt="behaviour_space"] {
+    margin-left: 150px !important;
+}
