@@ -107,7 +107,7 @@ img[alt="coin_flip_collaborators"] {
 }
 
 img[alt="robot"] {
-    width: 300px;
+    width: 150px;
     float: right;
 }
 
@@ -118,3 +118,23 @@ img[alt="robot"] {
 img[alt="behaviour_space"] {
     margin-left: 150px !important;
 }
+
+/* Section Heading Icons */
+
+img[alt="unit_testing"],
+img[alt="why_mock"],
+img[alt="double"],
+img[alt="pattern_matching"],
+img[alt="limitations"] {
+    width: 200px;
+    position: relative;
+    top: 30px !important;
+}
+
+/*
+img[alt="limitations"] {
+    position: relative;
+    top: 30px !important;
+    width: 220px;
+}
+*/

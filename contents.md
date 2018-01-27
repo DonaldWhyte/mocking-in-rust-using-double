@@ -30,6 +30,8 @@
 [NEXT SECTION]
 ## 1. Unit Testing
 
+![unit_testing](images/unit_testing.svg)
+
 _note_
 * classist vs mockist testing
     - look up newer literature for this
@@ -163,6 +165,8 @@ Focus of talk is mocking, so these are not covered here.
 [NEXT SECTION]
 ## 2. Why Mock?
 
+![why_mock](images/why_mock.svg)
+
 [NEXT]
 ![whymock](images/whymock1.png)
 
@@ -247,7 +251,7 @@ they:
     * easy to change
 
 [NEXT]
-## Solution: Use Test Double
+## Solution: Use Test fble
 
 ![stunt_double](images/brad_double_small.jpg)
 
@@ -281,6 +285,8 @@ WHY? Mocks are the most flexible. They're a superset of stubs and spies.
 
 [NEXT SECTION]
 ## 3. Mocking in Rust Using `double`
+
+![double](images/double.svg)
 
 [NEXT]
 ## Coin Flipper
@@ -376,15 +382,19 @@ fn play() {
 [NEXT]
 ## Double to the Rescue!
 
+[NEXT]
 * **generate** mock trait implementations using macros
 * flexible configuration of mock's **behaviour**
 * can make simple and complex **assertions** on mock calls
 * **pattern matching** for call arguments
 
+[NEXT]
+<!-- .slide: class="large-slide" -->
+**Two Core Design Principles**
 
 [NEXT]
 <!-- .slide: class="large-slide" -->
-**Rust Stable First**
+**1. Rust Stable First**
 
 _note_
 Emphasise how these goals has had the biggest influence on the design of the
@@ -405,28 +415,12 @@ Require changing prod code (and thus, can't be used for external `traits`) and r
   - https://github.com/CodeSandwich/Mocktopus
   - https://github.com/mindsbackyard/galvanic-mock
 
-
 [NEXT]
 <!-- .slide: class="large-slide" -->
-**No Changes to Production Code**
-
+**2. No Changes to Production Code**
 
 [NEXT]
 ## Defining Mock Collaborators
-
-TODO: image on this screen
-
-[NEXT]
-**`mock_trait!`**
-
-```rust
-mock_trait!(
-    NameOfMockStruct,
-    method1_name(arg1_type, ..., argM_type) -> return_type,
-    method2_name(arg1_type, ..., argM_type) -> return_type
-    ...
-    methodN_name(arg1_type, ..., argM_type) -> return_type);
-```
 
 [NEXT]
 **`mock_trait!`**
@@ -441,11 +435,39 @@ mock_trait!(
 </code></pre>
 
 [NEXT]
+**`mock_trait!`**
+
+```rust
+mock_trait!(
+    NameOfMockStruct,
+    method1_name(arg1_type, ..., argM_type) -> return_type,
+    method2_name(arg1_type, ..., argM_type) -> return_type
+    ...
+    methodN_name(arg1_type, ..., argM_type) -> return_type);
+```
+
+[NEXT]
 **`mock_method!`**
 
 Generate implementations of all methods in mock `struct`.
 
-```
+<pre><code data-noescape class="rust">pub trait Rng {
+    fn next_f64(&mut self) -> f64;
+}
+
+mock_trait!(
+    MockRng,
+    next_f64() -> f64);
+
+<mark>impl Rng for MockRng {</mark>
+<mark>    mock_method!(next_f64(&mut self) -> f64);</mark>
+<mark>}</mark>
+</code></pre>
+
+[NEXT]
+**`mock_method!`**
+
+```rust
 impl TraitToMock for NameOfMockStruct {
 
   mock_method!(
@@ -462,22 +484,6 @@ impl TraitToMock for NameOfMockStruct {
 }
 ```
 <!-- .element class="medium-large" -->
-
-[NEXT]
-**`mock_method!`**
-
-<pre><code data-noescape class="rust">pub trait Rng {
-    fn next_f64(&mut self) -> f64;
-}
-
-mock_trait!(
-    MockRng,
-    next_f64() -> f64);
-
-<mark>impl Rng for MockRng {</mark>
-<mark>    mock_method!(next_f64(&mut self) -> f64);</mark>
-<mark>}</mark>
-</code></pre>
 
 [NEXT]
 Full code to generate a mock implementation of a `trait`:
@@ -652,21 +658,21 @@ fn using_closure_for_specific_return_value() {
 </code></pre>
 
 [NEXT]
-<!-- .slide: class="small-slide" -->
-#### Precedence Order
+### Precedence Order
 
-Top = highest, bottom = lowest.
-
-* Behaviour for specific input args:
-  - `use_closure_for((args), closure)`
-  - `use_fn_for((args), func)`
-  - `return_value_for((args), value)`
-* Behaviour for all input args:
-  - `use_fn(func)`
-  - `use_closure(closure)`
-  - `return_value(value)`
-* When no behaviour is set:
-  - `ReturnType::default()`
+|   |   |
+| - | - |
+|   | **Behaviour for specific inputs** |
+| 0 | `use_closure_for((args), closure)` |
+| 1 | `use_fn_for((args), func)` |
+| 2 | `return_value_for((args), value)` |
+|   | **Behaviour for any inputs** |
+| 3 | `use_fn(func)` |
+| 4 | `use_closure(closure)` |
+| 5 | `return_value(value)` |
+|   | **When no behaviour is set** |
+| 6 | `ReturnType::default()` |
+<!-- .element class="medium-table-text" -->
 
 [NEXT]
 ### `Option` Helpers
@@ -826,24 +832,86 @@ TODO
 
 TODO
 
-
 [NEXT SECTION]
 ## 4. Pattern Matching
 
-![pattern_matching](images/pattern_matching.jpg)
+![pattern_matching](images/pattern_matching.svg)
 
 _note_
 When a mock function has been used in a test, we typically want to make assertions about what the mock has been called with.
 
 [NEXT]
+### Robot Decision Making
+![robot](images/robot.svg)
+
+* TODO
+* TODO
+
+[NEXT]
+### Robot Decision Making
+
+<pre class="medium"><code data-noescape class="rust">pub struct WorldState {
+    ...
+}
+
+pub struct Robot {
+    actuator: Actuator
+}
+
+impl Robot {
+    pub fn new(actuator: Actuator) -> Brain {
+        actuator: Actuator
+    }
+
+    pub fn take_action(state: WorldState) {
+<mark>        // Complex business logic that decides what actions</mark>
+<mark>        // the robot should take.</mark>
+<mark>        // This is what we want to test.</mark>
+    }
+  }
+}
+</code></pre>
+
+[NEXT]
+### Robot Decision Making
+
 ```rust
-#[test]
-fn test_the_robot() {
-    let robot = MockRobot::default();
-    test_complex_business_logic_that_makes_decisions(&robot);
-    assert!(robot.move_forward.called_with(100));
+pub trait Actuator {
+    fn move_forward(&mut self, amount: i32);
+    fn TODO()
 }
 ```
+
+[NEXT]
+### Testing Robot's Decisions
+
+```rust
+mock_trait!(
+    MockActuator,
+    move_forward(i32) -> (),
+    // TODO: second func);
+impl Actuator for MockActuator {
+    mock_method!(move_forward(&mut self, amount: i32));
+    // TODO: second func
+}
+```
+
+[NEXT]
+### Testing Robot's Decisions
+
+<pre><code data-noescape class="rust">#[test]
+fn test_the_robot() {
+    // GIVEN:
+    let mock = MockAct
+    let robot = Robot::new(mock);
+
+    // WHEN:
+    robot.TODO();
+
+    // THEN:
+<mark>    assert!(robot.move_forward.called_with(100));</mark>
+}
+</code></pre>
 
 _note_
 For example, suppose we're testing some logic that determines the next action of a robot. We might want to assert what this logic told the robot to do.
@@ -880,20 +948,31 @@ Sometimes you might not want to be this specific. This can make tests being too 
 </div>
 
 [NEXT]
-TODO: intro patterns
+TODO: summarise points above
 
 [NEXT]
+TODO
+
+[NEXT]
+**`p!`**
+
 <pre><code data-noescape class="rust"><mark>use double::matcher::*;</mark>
 
 #[test]
 fn test_the_robot() {
     let robot = MockRobot::default();
     test_complex_business_logic_that_makes_decisions(&robot);
-<mark>    assert!(robot.move_forward.called_with_pattern(p!(ge, 100)));</mark>
+<mark>    assert!(robot.move_forward.called_with_pattern(</mark>
+<mark>        p!(ge, 100)</mark>
+<mark>    ));</mark>
 }
 </code></pre>
 
 [NEXT]
+**`matcher!`**
+
+TODO
+
 ```rust
 assert!(robot.move.called_with_pattern(
     matcher!( p!(ge, 100), p!(eq, Direction::Left) )
@@ -901,6 +980,8 @@ assert!(robot.move.called_with_pattern(
 ```
 
 [NEXT]
+#### Composite Matchers
+
 ```rust
 assert!(robot.move_forward.called_with_pattern(
     matcher!(
@@ -911,9 +992,12 @@ assert!(robot.move_forward.called_with_pattern(
 ```
 
 _note_
- This reads:
+This reads:
      * first arg should be >= 100
      * second arg should be `Direction::Left`
+
+[NEXT]
+TODO: reiterate that you're expanding the allowed behaviour space
 
 [NEXT]
 ### Custom Matchers
@@ -1020,109 +1104,11 @@ fn ensure_current_time_field_is_returned() {
 _note_
 Using the matcher then requires binding it to a parameter (using `p!`) and passing it to a mock assertion method.
 
-[NEXT]
-TODO: intro to robot problem
-
-![robot](images/robot.jpg)
-
-[NEXT]
-```
-WorldState -> Brain -> Actuator
-```
-
-(WorldState as perceived by the robot)
-
-[NEXT]
-```rust
-pub struct WorldState {
-    ...
-}
-```
-
-[NEXT]
-```rust
-enum Action {
-    // TODO
-    ...
-};
-
-pub trait Actuator {
-    fn run_actions(&self, state: WorldState) -> WorldState;
-}
-```
-
-[NEXT]
-```rust
-pub struct Brain {
-    // Contains various state that the brain uses to make decisions
-    // e.g. memory of what's happened in the past
-}
-
-impl Brain {
-    fn decide_actions(&mut self,
-                      state: &WorldState) -> Vec<Actions>
-    {
-        // TODO: comment what's here
-    }
-}
-```
-
-[NEXT]
-```rust
-fn run_time_step(brain: &mut Brain,
-                 actuator: &Actuator,
-                 state: WorldState) -> WorldState
-{
-    let actions = brain.decide_actions(state);
-    actuator.run_actions(actions)
-}
-```
-
-[NEXT]
-### Code Under Test
-
-TODO: diagram with `Brain` and `run_time_step` highlighted
-
-[NEXT]
-### Code Being Mocked
-
-TODO: diagram with `Actuator` highlighted
-
-[NEXT]
-```rust
-mock_trait!(
-    MockActuator,
-    run_actions(WorldState) -> WorldState);
-
-impl Actuator for MockActuator {
-    mock_method!(run_actions(&self, state: WorldState) -> WorldState);
-}
-```
-
-[NEXT]
-```rust
-#[test]
-fn TODO {
-    let state = WorldState { ... };
-    let brain = Brain::new()
-}
-```
-
-[NEXT]
-### More Examples
-
-TODO
-
-[NEXT]
-### Custom Matchers
-
-TODO: add if have time
-
-TODO: make a custom matcher for the actions case
 
 [NEXT SECTION]
+## 5. Library Constraints
 
-## 5. Limitations
+![limitations](images/limitations.svg)
 
 [NEXT]
 TODO: mention that the vision for this library that this must be usable in `stable`
@@ -1160,29 +1146,36 @@ TODO: reference the following libs: mockers, mock-derive, mock_me, mocktopus
 TODO: conclusion
 
 [NEXT]
+<!-- .slide: class="small-slide" -->
 ## Links
 
-* double repository
-  - https://github.com/DonaldWhyte/double
-* double documentation
-  - https://docs.rs/double/0.2.0/double/
-* these slides
+* these slides:
   - http://donsoft.io/mocking-in-rust-using-double
-* example code from this talk
+* double repository:
+  - https://github.com/DonaldWhyte/double
+* double documentation:
+  - https://docs.rs/double/0.2.0/double/
+* example code from this talk:
   - https://github.com/DonaldWhyte/mocking-in-rust-using-double/tree/master/code
 
 [NEXT]
 ## Get In Touch
 
-<table class="bio-table">
-  <tr>
-    <td>![small_portrait](images/donald.jpg)</td>
-  </tr>
-  <tr>
-    <td>
-      [don@donsoft.io](mailto:don@donsoft.io)<br />
-      [@donald_whyte](http://twitter.com/donald_whyte)<br />
-      <span class="github">https://github.com/DonaldWhyte</span>
-    </td>
-  </tr>
-</table>
+<div class="left-col">
+  ![small_portrait](images/donald.jpg)
+</div>
+<div class="right-col" style="text-center: left">
+  <br />
+  [don@donsoft.io](mailto:don@donsoft.io)<br />
+  [@donald_whyte](http://twitter.com/donald_whyte)<br />
+  <span class="github">https://github.com/DonaldWhyte</span>
+</div>
+<div class="clear-col"></div>
+
+[NEXT]
+## Image Credits
+
+[Gregor Cresnar](https://www.flaticon.com/authors/gregor-cresnar)
+[Zurb](https://www.flaticon.com/authors/zurb)
+[Freepik](http://www.flaticon.com/authors/freepik)
+[Dave Gandy](http://fontawesome.io/)
