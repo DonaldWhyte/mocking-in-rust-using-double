@@ -13,6 +13,16 @@
     float: right;
 }
 
+.left-col1of3 {
+    width: 33%;
+    float: left;
+}
+
+.right-col2of3 {
+    width: 66%;
+    float: left;
+}
+
 .clear-col {
     float: none;
     clear: both;

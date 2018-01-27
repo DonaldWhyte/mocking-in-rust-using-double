@@ -8,14 +8,24 @@
 [NEXT]
 ### About Me
 
-<table class="bio-table">
-  <tr>
-    <td>![portrait](images/donald.jpg)</td>
-  </tr>
-  <tr>
-    <td>TODO</td>
-  </tr>
-</table>
+<div class="left-col1of3">
+  ![small_portrait](images/donald.jpg)
+</div>
+<div class="right-col2of3" style="text-center: left">
+  <div style="height: 27px"></div>
+  <ul>
+    <li>Software Engineer @ <strong>Engineers Gate</strong></li>
+    <li>Real-time trading systems</li>
+    <li>Scalable data infrastructure</li>
+    <li>C++ developer and Rust enthusiast</li>
+  </ul>
+</div>
+<div class="clear-col"></div>
+
+_note_
+TODO: intro to me, write down after saying out loud
+
+Empahsise background building high-performance enterprise software in C++ for several years.
 
 [NEXT]
 ## Outline
@@ -24,7 +34,7 @@
 2. Why Mock?
 3. Mocking in Rust with `double`
 4. Pattern Matching
-5. Limitations
+5. Library Constraints
 
 
 [NEXT SECTION]
@@ -544,7 +554,7 @@ pub trait ProfitForecaster {
     fn profit_at(timestamp: u64) -> f64;
 }
 
-pub fn forecast_profit_over_time(forecaster: &ProfitForecaster,
+pub fn forecast_profit_over_time(&forecaster: &ProfitForecaster,
                                  start: u64,
                                  end: u64) -> Vec<f64>
 {
@@ -569,10 +579,10 @@ impl ProfitForecaster for MockForecaster {
 <pre><code data-noescape class="rust">#[test]
 fn no_return_value_specified() {
   // GIVEN:
-  let forecaster = MockForecaster::default();
+  let mock = MockForecaster::default();
 
   // WHEN:
-  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
 
   // THEN:
   // default value of return type is used if no value is specified
@@ -584,11 +594,11 @@ fn no_return_value_specified() {
 <pre><code data-noescape class="rust">#[test]
 fn single_return_value() {
   // GIVEN:
-  let forecaster = MockForecaster::default();
-<mark>  forecaster.profit_at.return_value(10);</mark>
+  let mock = MockForecaster::default();
+<mark>  mock.profit_at.return_value(10);</mark>
 
   // WHEN:
-  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
 
   // THEN:
 <mark>  assert_eq!(vec!(10, 10, 10), profit_over_time);</mark>
@@ -599,11 +609,11 @@ fn single_return_value() {
 <pre><code data-noescape class="rust">#[test]
 fn multiple_return_values() {
   // GIVEN:
-  let forecaster = MockForecaster::default();
-<mark>  forecaster.profit_at.return_values(1, 5, 10);</mark>
+  let mock = MockForecaster::default();
+<mark>  mock.profit_at.return_values(1, 5, 10);</mark>
 
   // WHEN:
-  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
 
   // THEN:
 <mark>  assert_eq!(vec!(1, 5, 10), profit_over_time);</mark>
@@ -614,12 +624,12 @@ fn multiple_return_values() {
 <pre><code data-noescape class="rust">#[test]
 fn return_value_for_specific_arguments() {
   // GIVEN:
-  let forecaster = MockForecaster::default();
-<mark>  forecaster.profit_at.return_value(10);</mark>
-<mark>  forecaster.profit_at.return_value_for((1), 5);</mark>
+  let mock = MockForecaster::default();
+<mark>  mock.profit_at.return_value(10);</mark>
+<mark>  mock.profit_at.return_value_for((1), 5);</mark>
 
   // WHEN:
-  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
 
   // THEN:
 <mark>  assert_eq!(vec!(10, 5, 10), profit_over_time);</mark>
@@ -630,11 +640,11 @@ fn return_value_for_specific_arguments() {
 <pre><code data-noescape class="rust">#[test]
 fn using_closure_to_compute_return_value() {
   // GIVEN:
-  let forecaster = MockForecaster::default();
-<mark>  forecaster.profit_at.use_closure(|t| t * 5 + 1);</mark>
+  let mock = MockForecaster::default();
+<mark>  mock.profit_at.use_closure(|t| t * 5 + 1);</mark>
 
   // WHEN:
-  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
 
   // THEN:
 <mark>  assert_eq!(vec!(0, 6, 11), profit_over_time);</mark>
@@ -645,12 +655,12 @@ fn using_closure_to_compute_return_value() {
 <pre><code data-noescape class="rust">#[test]
 fn using_closure_for_specific_return_value() {
   // GIVEN:
-  let forecaster = MockForecaster::default();
-<mark>  forecaster.profit_at.return_value(10);</mark>
-<mark>  forecaster.profit_at.use_closure_for((2), |t| t * 5 + 1);</mark>
+  let mock = MockForecaster::default();
+<mark>  mock.profit_at.return_value(10);</mark>
+<mark>  mock.profit_at.use_closure_for((2), |t| t * 5 + 1);</mark>
 
   // WHEN:
-  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
 
   // THEN:
 <mark>  assert_eq!(vec!(0, 10, 11), profit_over_time);</mark>
@@ -785,18 +795,18 @@ Verify mocks are called the right number of times and with the right arguments.
 <pre><code data-noescape class="rust">#[test]
 fn asserting_mock_was_called() {
   // GIVEN:
-  let forecaster = MockForecaster::default();
+  let mock = MockForecaster::default();
 
   // WHEN:
-  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
 
   // THEN:
   // called at least once
-<mark>  assert!(forecaster.profit_at.called());</mark>
+<mark>  assert!(mock.profit_at.called());</mark>
   // called with argument 1 at least once
-<mark>  assert!(forecaster.profit_at.called_with((1));</mark>
+<mark>  assert!(mock.profit_at.called_with((1));</mark>
   // called at least once with argument 1 and 0
-<mark>  assert!(forecaster.profit_at.has_calls((1), (0));</mark>
+<mark>  assert!(mock.profit_at.has_calls((1), (0));</mark>
 }
 </code></pre>
 
@@ -804,33 +814,62 @@ fn asserting_mock_was_called() {
 <pre class="medium"><code data-noescape class="rust">#[test]
 fn asserting_mock_was_called_with_precise_constraints() {
   // GIVEN:
-  let forecaster = MockForecaster::default();
+  let mock = MockForecaster::default();
 
   // WHEN:
-  let profit_over_time = forecast_profit_over_time(forecaster, 0, 3);
+  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
 
   // THEN:
   // called at least once with argument 0 and 1, in that order
-<mark>  assert!(forecaster.profit_at.has_calls_in_order((0), (1));</mark>
+<mark>  assert!(mock.profit_at.has_calls_in_order((0), (1));</mark>
   // called exactly three times, once with 0, once with 1 and once with 2
-<mark>  assert!(forecaster.profit_at.has_calls_exactly(</mark>
+<mark>  assert!(mock.profit_at.has_calls_exactly(</mark>
 <mark>      (1), (0), (2));</mark>
   // called exactly three times, once with 0, once with 1 and once with 2,
   // and the calls were made in the specified order
-<mark>  assert!(forecaster.profit_at.has_calls_exactly_in_order(</mark>
+<mark>  assert!(mock.profit_at.has_calls_exactly_in_order(</mark>
 <mark>      (0), (1), (2));</mark>
 }
 </code></pre>
 
 [NEXT]
-### Generic Type Arguments
+### Mocks Returning References
 
+TODO: challenging
+
+[NEXT]
+```rust
+struct ConnectionHandle {
+    ...
+}
+
+pub trait ConnectionPool {
+    pub fn get_connection(&self) -> &ConnectionHandle;
+}
+```
+
+[NEXT]
+```rust
+mock_trait!(
+    MockConnectionPool,
+    get_connection() -> &ConnectionHandle);
+
+impl ConnectionPool for MockConnectionPool {
+    mock_method!(get_connection(&self) -> &ConnectionHandle);
+}
+```
+
+[NEXT]
 TODO
 
 [NEXT]
-### Methods that Return References
+TODO: future work on them!
 
-TODO
+[NEXT]
+### Generic Type Arguments
+
+TODO: there is some support for this, but it's a complex topic so out of scope of this talk
+
 
 [NEXT SECTION]
 ## 4. Pattern Matching
@@ -1262,38 +1301,60 @@ TODO: general takeaways
 
 [NEXT SECTION]
 ## 5. Library Constraints
-
 ![limitations](images/limitations.svg)
 
 [NEXT]
-TODO: mention that the vision for this library that this must be usable in `stable`
+### Core Design Philosophy of `double`
+
+1. Rust stable first
+2. No changes to production code required
 
 _note_
-The vision for `double` is that must use `stable`.
-
-TODO: this makes supporting some features difficult
-
-here exist many other mocking libraries that use nightly compiler plugins. 
+The vision for `double` is that must work with stable Rust. It must don't impose code changes to the user's production code either. This makes supporting some features difficult.
 
 [NEXT]
-### Type Limitations
+#### 1. Rust Stable First
 
-* Argument/return value types must implement these traits:
-  - `Clone`
-  - `Debug`
-  - `Eq`
-  - `Hash`
-* Only `pub trait`s can be mocked
+Almost all mocking libraries require nightly.
 
 _note_
-TODO
+The vast majority of other mocking libraries that use nightly compiler plugins. This gives them more flexibility at the cost of restricting the user to nightly Rust.
 
 [NEXT]
-TODO: general takeaways of stable Rust limitations
+#### 2. No Changes to Production Code Required
 
-TODO: reference the following libs: mockers, mock-derive, mock_me, mocktopus
-  ^--- list how many support stable! arguments against the ones that use stable
-  ^--- see what features limit nightly libs
+All current mocking libraries require users changes to production code.
+
+Makes mocking `traits` from the standard library or external crates **impossible**.
+
+_note_
+The following other mocking libraries have similar feature sets to `double`, require nightly:
+  * mockers (has partial support for stable)
+  * mock-derive
+  * galvanic-mock
+  * mock_me
+  * mocktopus
+
+And none of them support mocking traits from the standard library or external crates.
+
+[NEXT]
+**Rust stable and no code changes comes at a cost.**
+
+[NEXT]
+### Limitations
+
+1. Argument types must implement `Clone` and `Eq`
+2. Return value types must implement `Clone`
+3. Private `trait`s cannot be mocked
+4. Limited support for generic type arguments
+
+_note_
+(1) and (2) are constraints caused by the current implementation of `double`.
+
+I believe no existing mocking library, using nightly or otherwise, have properly solved (3) and (4).
+
+[NEXT]
+Ongoing work on `double` to remove these limitations.
 
 
 [NEXT SECTION]
@@ -1304,7 +1365,7 @@ TODO: conclusion
 
 [NEXT]
 <!-- .slide: class="small-slide" -->
-## Links
+### Links
 
 * these slides:
   - http://donsoft.io/mocking-in-rust-using-double
@@ -1316,21 +1377,21 @@ TODO: conclusion
   - https://github.com/DonaldWhyte/mocking-in-rust-using-double/tree/master/code
 
 [NEXT]
-## Get In Touch
+### Get In Touch
 
-<div class="left-col">
-  ![small_portrait](images/donald.jpg)
-</div>
-<div class="right-col" style="text-center: left">
+<div class="left-col" style="text-center: left">
   <br />
   [don@donsoft.io](mailto:don@donsoft.io)<br />
   [@donald_whyte](http://twitter.com/donald_whyte)<br />
   <span class="github">https://github.com/DonaldWhyte</span>
 </div>
+<div class="right-col">
+  ![small_portrait](images/donald.jpg)
+</div>
 <div class="clear-col"></div>
 
 [NEXT]
-## Image Credits
+### Image Credits
 
 [Gregor Cresnar](https://www.flaticon.com/authors/gregor-cresnar)
 
@@ -1339,3 +1400,12 @@ TODO: conclusion
 [Freepik](http://www.flaticon.com/authors/freepik)
 
 [Dave Gandy](http://fontawesome.io/)
+
+
+[NEXT SECTION]
+## Appendix
+
+[NEXT]
+### Classist vs. Mockist
+
+TODO
