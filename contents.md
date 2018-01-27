@@ -842,20 +842,31 @@ When a mock function has been used in a test, we typically want to make assertio
 
 [NEXT]
 ### Robot Decision Making
-![robot](images/robot.svg)
-
-* TODO
-* TODO
+![actuator_large](images/actuator.svg)
 
 [NEXT]
-### Robot Decision Making
+![robot_scenario](images/robot_scenario1.svg)
 
-<pre class="medium"><code data-noescape class="rust">pub struct WorldState {
+|              |                                                            |
+| ------------ | ---------------------------------------------------------- |
+| `WorldState` | Struct containing current state of world. |
+| `Robot`      | Processes state of the world and makes decisions on what do to next. |
+| `Actuator`   | Manipulates the world. Used by `Robot` to act on the decisions its made. |
+
+[NEXT]
+![world_state](images/world_state.svg)
+
+```rust
+pub struct WorldState {
     ...
 }
+```
 
-pub struct Robot {
-    actuator: Actuator
+[NEXT]
+![robot](images/robot.svg)
+
+<pre class="medium"><code data-noescape class="rust">pub struct Robot {
+    actuator: &mut Actuator
 }
 
 impl Robot {
@@ -873,7 +884,7 @@ impl Robot {
 </code></pre>
 
 [NEXT]
-### Robot Decision Making
+![actuator](images/actuator.svg)
 
 ```rust
 pub trait Actuator {
@@ -884,6 +895,14 @@ pub trait Actuator {
 
 [NEXT]
 ### Testing Robot's Decisions
+![robot_scenario](images/robot_scenario2.svg)
+
+[NEXT]
+### Testing Robot's Decisions
+![robot_scenario](images/robot_scenario3.svg)
+
+[NEXT]
+![mock_actuator](images/mock_actuator.svg)
 
 ```rust
 mock_trait!(
@@ -897,19 +916,20 @@ impl Actuator for MockActuator {
 ```
 
 [NEXT]
-### Testing Robot's Decisions
-
 <pre><code data-noescape class="rust">#[test]
 fn test_the_robot() {
     // GIVEN:
-    let mock = MockAct
-    let robot = Robot::new(mock);
+    let actuator = MockActuator::default();
+    let input_state = WorldState { ... };
 
     // WHEN:
-    robot.TODO();
-
+    {
+        let robot = Robot::new(&actuator);
+        robot.take_action(input_state);    
+    }
+    
     // THEN:
-<mark>    assert!(robot.move_forward.called_with(100));</mark>
+<mark>    assert!(actuator.move_forward.called_with(100));</mark>
 }
 </code></pre>
 
@@ -995,6 +1015,11 @@ _note_
 This reads:
      * first arg should be >= 100
      * second arg should be `Direction::Left`
+
+[NEXT]
+```rust
+// TODO:
+```
 
 [NEXT]
 TODO: reiterate that you're expanding the allowed behaviour space
@@ -1176,6 +1201,9 @@ TODO: conclusion
 ## Image Credits
 
 [Gregor Cresnar](https://www.flaticon.com/authors/gregor-cresnar)
+
 [Zurb](https://www.flaticon.com/authors/zurb)
+
 [Freepik](http://www.flaticon.com/authors/freepik)
+
 [Dave Gandy](http://fontawesome.io/)

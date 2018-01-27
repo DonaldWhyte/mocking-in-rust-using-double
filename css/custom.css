@@ -106,17 +106,36 @@ img[alt="coin_flip_collaborators"] {
     width: 450px;
 }
 
-img[alt="robot"] {
-    width: 150px;
-    float: right;
-}
-
 .behaviour_space_wrapper {
     float: left;
 }
 
 img[alt="behaviour_space"] {
     margin-left: 150px !important;
+}
+
+img[alt="actuator_large"] {
+    width: 250px;
+}
+
+img[alt="robot_scenario"] {
+    width: 700px;
+}
+
+img[alt="world_state"] {
+    width: 100px;
+}
+
+img[alt="robot"] {
+    width: 100px;
+}
+
+img[alt="actuator"] {
+    width: 100px;
+}
+
+img[alt="mock_actuator"] {
+    width: 100px;
 }
 
 /* Section Heading Icons */
@@ -130,11 +149,3 @@ img[alt="limitations"] {
     position: relative;
     top: 30px !important;
 }
-
-/*
-img[alt="limitations"] {
-    position: relative;
-    top: 30px !important;
-    width: 220px;
-}
-*/
