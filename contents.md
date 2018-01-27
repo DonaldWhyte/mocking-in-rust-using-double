@@ -1,9 +1,14 @@
 # Mocking in Rust
 
 <p>
-    <a href="http://donaldwhyte.co.uk">Donald Whyte</a>
+    <a href="http://donsoft.io">Donald Whyte</a>
     / <a href="http://twitter.com/donald_whyte">@donald_whyte</a>
 </p>
+
+<div id="logo-notice">
+  <img src="images/fosdem.svg" alt="fosdem" />
+  <p><strong>FOSDEM 2018</strong></p>
+</div>
 
 [NEXT]
 ### About Me
@@ -273,7 +278,7 @@ Should appear exactly the same as a **"real"** production instance to its client
 Term originates from a notion of a _"stunt double"_ in films.
 
 _note_
-This is *how* we eliminate these unwanted dependencies from our tests.
+This is how we eliminate these unwanted dependencies from our tests.
 
 Similar to using a stunt double in films, where viewers don't notice that
 stunts are performed by a different actor.
@@ -283,12 +288,50 @@ stunts are performed by a different actor.
 
 * **Stubs** return hard-coded values
 * **Spies** record the code's interaction with collaborators
-    * times method called and passed arguments
+    - times method called and passed arguments
 * **Mocks** return hard-coded values and verify interaction
-    * both a stub and a spy
+    - both a stub and a spy
+
+_note_
+Stubs provide canned answers to calls made during the test, usually not responding at all to anything outside what's programmed in for the test.
+
+Spies are stubs that also record some information based on how they were called. One form of this might be an email service that records how many messages it was sent.
+
+Mocks are what we are talking about here: objects pre-programmed with expectations which form a specification of the calls they are expected to receive.
+
+Souce: https://martinfowler.com/articles/mocksArentStubs.html
 
 [NEXT]
-**Mocks** are the focus of this talk.
+<div class="left-col">
+  <h4>State Verification</h4>
+  <p>
+    Test code by asserting on the its and its collaboator's <strong>post-test state</strong>.
+  </p>
+  <hr />
+  <ul>
+    <li>Stubs</li>
+    <li>Spies</li>
+  </ul>
+</div>
+<div class="right-col">
+  <h4>Behaviour Verification</h4>
+  <p>
+    Test code by asserting on its <strong>interaction</strong> with its collaborators.
+  </p>
+  <hr />
+  <ul>
+    <li>Mocks</li>
+  </ul>
+</div>
+<div class="clear-col"></div>
+
+_note_
+Of these kinds of doubles, only mocks insist upon behavior verification.
+
+Souce: https://martinfowler.com/articles/mocksArentStubs.html
+
+[NEXT]
+Behaviour verification with **mocks** is the focus of this talk.
 
 _note_
 WHY? Mocks are the most flexible. They're a superset of stubs and spies.
@@ -833,35 +876,46 @@ fn asserting_mock_was_called_with_precise_constraints() {
 </code></pre>
 
 [NEXT]
-### Mocks Returning References
-
-TODO: challenging
+### Mocking Free Functions
 
 [NEXT]
-```rust
-struct ConnectionHandle {
-    ...
-}
+`double` can also be used to mock free functions.
 
-pub trait ConnectionPool {
-    pub fn get_connection(&self) -> &ConnectionHandle;
-}
-```
+Useful for testing code that takes function objects for runtime polymorphism.
 
 [NEXT]
-```rust
-mock_trait!(
-    MockConnectionPool,
-    get_connection() -> &ConnectionHandle);
-
-impl ConnectionPool for MockConnectionPool {
-    mock_method!(get_connection(&self) -> &ConnectionHandle);
+<pre class="medium"><code data-noescape class="rust">fn generate_sequence(
+    <mark>func: &Fn(i32) -> i32,</mark>
+    min: i32,
+    max: i32) -> Vec<i32>
+{
+    // exclusive range
+    (min..max).map(func).collect()
 }
-```
+</pre></code>
 
 [NEXT]
-TODO
+**`mock_func!`**
 
+<pre class="medium"><code data-noescape class="rust">#[test]
+fn test_function_used_correctly() {
+    // GIVEN:
+<mark>    let mock = Mock::<(i32), i32>::default();</mark>
+<mark>    mock.use_closure(Box::new(|x| x * 2));</mark>
+
+    // WHEN:
+    let sequence = generate_sequence(
+<mark>        &mock_func!(mock, i32, i32),</mark>
+        1,
+        5);
+
+    // THEN:
+    assert_eq!(vec!(2, 4, 6, 8), sequence);
+    assert!(mock.has_calls_exactly(vec!(
+      1, 2, 3, 4
+    )));
+}
+</code></pre>
 
 [NEXT SECTION]
 ## 4. Pattern Matching
@@ -1000,23 +1054,30 @@ Sometimes you might not want to be this specific. This can make tests being too 
 </div>
 
 [NEXT]
-TODO: summarise points made in diagrams above
+Behaviour verification can **overfit** the implementation.
+
+Lack of tooling makes this more likely.
+
+_note_
+Without proper tooling, developers are more likely to use unnecessarily tight assertions when verifying behaviour.
+
+Writing loose assertions can be surprisingly cumbersome.
+
+[NEXT]
+### Pattern Matching to the Rescue
 
 [NEXT]
 Match argument values to a patterns.
 
-**Not exact values.**
+**_Not exact values._**
 
 Loosens test expectations, making them less brittle.
-
-_note_
-Emphasise how this is a pain 
 
 [NEXT]
 **`called_with_pattern()`**
 
-<pre><code data-noescape class="rust">fn is_greater_than_or_equal_to_100(num: i32) -> bool {
-    num >= 100
+<pre><code data-noescape class="rust">fn is_greater_than_or_equal_to_100(arg: i32) -> bool {
+    arg >= 100
 }
 
 #[test]
@@ -1045,8 +1106,60 @@ fn test_the_robot() {
 </code></pre>
 
 [NEXT]
-#### Composite Matchers
+### Built-in Matchers
 
+[NEXT]
+##### Wildcard
+|         |                                               |
+| ------- | --------------------------------------------- |
+| `any()` | argument can be any value of the correct type |
+<!-- .element class="medium-table-text" -->
+
+[NEXT]
+##### Comparison Matchers
+|                    |                                                                 |
+| ------------------ | --------------------------------------------------------------- |
+| `eq(value)`        | `argument == value`                                             |
+| `ne(value)`        | `argument != value`                                             |
+| `lt(value)`        | `argument < value`                                              |
+| `le(value)`        | `argument <= value`                                             |
+| `gt(value)`        | `argument > value`                                              |
+| `ge(value)`        | `argument >= value`                                             |
+| `is_some(matcher)` | argument is an `Option::Some`, whose contents matches `matcher` |
+| `is_ok(matcher)`   | argument is an `Result::Ok`, whose contents matches `matcher`   |
+| `is_err(matcher)`  | argument is an `Result::er`, whose contents matches `matcher`   |
+<!-- .element class="medium-table-text" -->
+
+[NEXT]
+##### Floating-Point Matchers
+|                               |                                                                                             |
+| ----------------------------- | ------------------------------------------------------------------------------------------- |
+| `f32_eq(value)`               | argument is a value approximately equal to the `f32` `value`, treating two NaNs as unequal. |
+| `f64_eq(value)`               | argument is a value approximately equal to the `f64` `value`, treating two NaNs as unequal. |
+| `nan_sensitive_f32_eq(value)` | argument is a value approximately equal to the `f32` `value`, treating two NaNs as equal.   |
+| `nan_sensitive_f64_eq(value)` | argument is a value approximately equal to the `f64` `value`, treating two NaNs as equal.   |
+<!-- .element class="medium-table-text" -->
+
+[NEXT]
+##### Container Matchers
+TODO
+
+[NEXT]
+##### String Matchers
+|                       |                                                   |
+| --------------------- | ------------------------------------------------- |
+| `contains(string)`    | argument contains `string` as a sub-string.       |
+| `starts_with(prefix)` | argument starts with string `prefix`.             |
+| `starts_with(suffix)` | argument ends with string `suffix`.               |
+| `eq_nocase(string)`   | argument is equal to `string`, ignoring case.     |
+| `ne_nocase(value)`    | argument is not equal to `string`, ignoring case. |
+<!-- .element class="medium-table-text" -->
+
+
+[NEXT]
+### Composite Matchers
+
+[NEXT]
 Assert that a single arg should match many patterns.
 
 ```rust
@@ -1060,8 +1173,6 @@ assert!(robot.move_forward.called_with_pattern(
 ```
 
 [NEXT]
-#### Composite Matchers
-
 |                            |                                                    |
 | -------------------------- | -------------------------------------------------- |
 | `all_of(vec!(m1, ... mn))` | argument matches all of the matchers `m1` to `mn`. |
@@ -1085,9 +1196,6 @@ fn test_the_robot() {
 <mark>    ));</mark>
 }
 </code></pre>
-
-[NEXT]
-TODO: reiterate that you're expanding the allowed behaviour space
 
 [NEXT]
 ### Custom Matchers
@@ -1288,7 +1396,27 @@ _note_
 Using the matcher then requires binding it to a parameter (using `p!`) and passing it to a mock assertion method.
 
 [NEXT]
-TODO: general takeaways
+### Interim Summary
+
+Mocking/behaviour verification can **overfit implementation**.
+
+Pattern matching **expands the asserted behaviour space**.
+
+Reducing overfitting
+
+[NEXT]
+### However...
+
+Pattern matching tests are cumbersome to write manually.
+
+`double` has built-in support for patterns to make it easier.
+
+_note_
+Writing assertions that use pattern matching is often cumbersome to write.
+
+This encourages developers to use eact value matching and overfit the implementation, because it's easier.
+
+Mocking libraries like `double` have tooling to make this easy, encouraging developers to write looser assertions.
 
 
 [NEXT SECTION]
@@ -1324,7 +1452,6 @@ The following other mocking libraries have similar feature sets to `double`, req
   * mockers (has partial support for stable)
   * mock_derive
   * galvanic-mock
-  * mock_me
   * mocktopus
 
 And none of them support mocking traits from the standard library or external crates.
@@ -1345,9 +1472,12 @@ trait Comparator {
 [NEXT]
 These can be mocked using `double`.
 
-Require extra boilerplate code.
+Sometimes requires boilerplate to be added to production code.
 
-Details on why are out of scope of this talk.
+_note_
+The detailed reasons why this is currently the case is out of scope for this talk. Note that there is ongoing work on allowing these traits to be used without neeeding production code changes.
+
+Speak to me after this talk if you're interested in learning more about this.
 
 [NEXT]
 ### All Limitations
@@ -1420,7 +1550,6 @@ Ongoing work on the library to remove these limitations.
 * [mockers](https://github.com/kriomant/mockers)
 * [mock_derive](https://github.com/DavidDeSimone/mock_derive)
 * [galvanic-mock](https://github.com/mindsbackyard/galvanic-mock)
-* [mock_me](https://github.com/craftytrickster/mock_me)
 * [mocktopus](https://github.com/CodeSandwich/Mocktopus)
 
 _note_
@@ -1472,3 +1601,4 @@ For completeness, here's a list of other Rust mocking crates. In additional to c
 ### Classist vs. Mockist
 
 TODO
+

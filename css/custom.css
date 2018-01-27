@@ -3,6 +3,26 @@
     box-shadow: none;
 }
 
+/* Title */
+#logo-notice {
+    position: relative;
+    top: 40px;
+    float: right;
+}
+
+#logo-notice p {
+    font-size: 18px;
+    margin: 5px;
+    text-align: center;
+}
+
+img[alt="fosdem"] {
+    width: 130px;
+    margin: 0px !important;
+}
+
+/* Multi-column Layout */
+
 .left-col {
     width: 50%;
     float: left;
@@ -27,6 +47,8 @@
     float: none;
     clear: both;
 }
+
+/* Font Styling */
 
 code {
     color: #22F;
