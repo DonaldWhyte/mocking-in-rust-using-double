@@ -870,8 +870,8 @@ pub struct WorldState {
 }
 
 impl Robot {
-    pub fn new(actuator: Actuator) -> Brain {
-        actuator: Actuator
+    pub fn new(actuator: Actuator) -> Robot {
+        Robot { actuator: &mut Actuator }
     }
 
     pub fn take_action(state: WorldState) {
@@ -889,7 +889,7 @@ impl Robot {
 ```rust
 pub trait Actuator {
     fn move_forward(&mut self, amount: i32);
-    fn TODO()
+    fn speak(&mut self, message: &str, volume: u32);
 }
 ```
 
@@ -908,10 +908,11 @@ pub trait Actuator {
 mock_trait!(
     MockActuator,
     move_forward(i32) -> (),
-    // TODO: second func);
+    speak(String, u32) -> ());
+
 impl Actuator for MockActuator {
     mock_method!(move_forward(&mut self, amount: i32));
-    // TODO: second func
+    mock_method!(speak(&mut self, message: &str, volume: u32));
 }
 ```
 
@@ -919,8 +920,8 @@ impl Actuator for MockActuator {
 <pre><code data-noescape class="rust">#[test]
 fn test_the_robot() {
     // GIVEN:
-    let actuator = MockActuator::default();
     let input_state = WorldState { ... };
+    let actuator = MockActuator::default();
 
     // WHEN:
     {
@@ -968,13 +969,37 @@ Sometimes you might not want to be this specific. This can make tests being too 
 </div>
 
 [NEXT]
-TODO: summarise points above
+TODO: summarise points made in diagrams above
 
 [NEXT]
-TODO
+Match argument values to a patterns.
+
+**Not exact values.**
+
+Loosens test expectations, making them less brittle.
+
+_note_
+Emphasise how this is a pain 
 
 [NEXT]
-**`p!`**
+**`called_with_pattern()`**
+
+<pre><code data-noescape class="rust">fn is_greater_than_or_equal_to_100(num: i32) -> bool {
+    num >= 100
+}
+
+#[test]
+fn test_the_robot() {
+    let robot = MockRobot::default();
+    test_complex_business_logic_that_makes_decisions(&robot);
+<mark>    assert!(robot.move_forward.called_with_pattern(</mark>
+<mark>        is_greater_than_or_equal_to_100</mark>
+<mark>    ));</mark>
+}
+</code></pre>
+
+[NEXT]
+Use `p!` to generate matcher functions on-the-fly.
 
 <pre><code data-noescape class="rust"><mark>use double::matcher::*;</mark>
 
@@ -989,37 +1014,46 @@ fn test_the_robot() {
 </code></pre>
 
 [NEXT]
-**`matcher!`**
+#### Composite Matchers
 
-TODO
+Assert that a single arg should match many patterns.
 
 ```rust
-assert!(robot.move.called_with_pattern(
-    matcher!( p!(ge, 100), p!(eq, Direction::Left) )
+// Assert robot moved between 100 and 200 units.
+assert!(robot.move_forward.called_with_pattern(
+    p!(all_of, vec!(
+        p!(ge, 100),
+        p!(le, 200)
+    ))
 ));
 ```
 
 [NEXT]
 #### Composite Matchers
 
-```rust
-assert!(robot.move_forward.called_with_pattern(
-    matcher!(
-        p!(all_of, vec!(
-            p!(ge, 100),
-            p!(le, 200))))
-));
-```
-
-_note_
-This reads:
-     * first arg should be >= 100
-     * second arg should be `Direction::Left`
+|                            |                                                    |
+| -------------------------- | -------------------------------------------------- |
+| `all_of(vec!(m1, ... mn))` | argument matches all of the matchers `m1` to `mn`. |
+| `any_of(vec!(m1, ... mn))` | matches at least one of the matchers `m1` to `mn`. |
+| `not(m)`                   | argument doesn't match matcher `m`.                |
+<!-- .element class="medium-table-text" -->
 
 [NEXT]
-```rust
-// TODO:
-```
+**`matcher!`**
+
+Create tuple of arg matchers for multi-arg methods.
+
+<pre><code data-noescape class="rust">use double::matcher::*;
+
+#[test]
+fn test_the_robot() {
+    let robot = MockRobot::default();
+    test_complex_business_logic_that_makes_decisions(&robot);
+<mark>    assert!(robot.speak.called_with_pattern(</mark>
+<mark>        matcher!( contains("Hello FOSDEM"), ge(0.7) )</mark>
+<mark>    ));</mark>
+}
+</code></pre>
 
 [NEXT]
 TODO: reiterate that you're expanding the allowed behaviour space
@@ -1031,7 +1065,11 @@ _note_
 If none of the built-in matchers fit your use case, you can define your own.
 
 [NEXT]
-TODO: scenario
+### Custom Matchers
+
+Let's test a HTTP request processor.
+
+It responds to clients with JSON.
 
 _note_
 Suppose we were testing a restful service. We have some request handling logic. We want to test the handling logic responded to the request correctly. In this context, "correctly" means it responded with a JSON object that contains the "time" key.
@@ -1039,36 +1077,36 @@ Suppose we were testing a restful service. We have some request handling logic. 
 [NEXT]
 ```rust
 trait ResponseSender {
-    fn send_response(&mut self, response: &str);
+    fn send_response(&mut self, response: String);
 }
 
 fn request_handler(response_sender: &mut ResponseSender) {
-    // ...
-    // business logic here...
-    // ...
-    response_sender.send_response(
-        "{ \"current_time\": \"2017-06-10 20:30:00\" }");
+    let num_records = /* ... business logic here ... */
+    let response = format!(
+        "{{ \"num_records\": {} }}",
+        num_records);
+    response_sender.send_response(response);
 }
 ```
 
 [NEXT]
-Step 1: Mock the relevant `trait`
+Step 1: Mock the relevant `trait`.
 
 ```rust
 mock_trait!(
     MockResponseSender,
     send_response(&str) -> ());
+
 impl ResponseSender for MockResponseSender {
     mock_method!(send_response(&mut self, response: &str));
 }
 ```
 
 [NEXT]
-Step 2: write the test
+Step 2: Write the test.
 
-```rust
-#[test]
-fn ensure_current_time_field_is_returned() {
+<pre><code data-noescape class="rust">#[test]
+fn ensure_num_records_field_is_returned() {
     // GIVEN:
     let mut mock_sender = MockResponseSender::default();
 
@@ -1076,15 +1114,104 @@ fn ensure_current_time_field_is_returned() {
     request_handler(&mock_sender);
 
     // THEN:
-    // check the sender received a response that contains a current_time field
+<mark>    // check the sender received a response that contains a</mark>
+<mark>    // "num_records" field</mark>
 }
-```
+</code></pre>
 
 [NEXT]
-TODO: how do we test?
+How do we test this?
 
 [NEXT]
-TODO: could do...write the code!
+Could check using exact string equality...
+
+<pre><code data-noescape class="rust">#[test]
+fn ensure_num_records_field_is_returned() {
+    // GIVEN:
+    let mut mock_sender = MockResponseSender::default();
+
+    // WHEN:
+    request_handler(&mock_sender);
+
+    // THEN:
+<mark>    assert!(mock_sender.send_response.called_with(</mark>
+<mark>        "{ \"num_records\": 42 }"</mark>
+<mark>    ));</mark>
+}
+</code></pre>
+
+[NEXT]
+Test is now tightly bound to implementation. Will break if:
+
+* JSON spacing/formatting changes
+* the value of "num_records" changes
+* there are other fields in the response
+
+**It's a brittle test!**
+
+[NEXT]
+Could use a substring matcher...
+
+<pre><code data-noescape class="rust">#[test]
+fn ensure_num_records_field_is_returned() {
+    // GIVEN:
+    let mut mock_sender = MockResponseSender::default();
+
+    // WHEN:
+    request_handler(&mock_sender);
+
+    // THEN:
+<mark>    assert!(mock_sender.send_response.called_with_pattern(</mark>
+<mark>        p!(contains, "\"num_records\":")</mark>
+<mark>    ));</mark>
+}
+</code></pre>
+
+[NEXT]
+Test is still tightly bound to implementation.
+
+Will break if JSON spacing/formatting changes.
+
+**No guarantee "num_records" is a key on the top-level JSON object.**
+
+[NEXT]
+Could extract the call arg, parse it as JSON and check the field exists.
+
+<pre class="small"><code data-noescape class="rust">extern crate json;
+use self::json;
+
+#[test]
+fn ensure_num_records_field_is_returned() {
+    ...
+
+    // THEN:
+<mark>    let calls = mock_sender.calls();</mark>
+<mark>    assert_eq!(1, calls.size());</mark>
+
+    match json::parse(calls[0]) {
+        Ok(json_value) => match json_value {
+            Object(object) => match object.get("num_records") {
+                Some(_) => true  // JSON object and has key -- success!
+                None => panic!("JSON object but doesn't have key");
+            },
+            _ => panic!("not an object (must be another JSON type)");
+        },
+        Err(_) => panic!("not valid JSON");
+    }
+}
+</code></pre>
+
+[NEXT]
+**Verbose** and hard to read test.
+
+What if we want to test many requests with dozens of cases?
+
+Testing like this results in a lot of **copy/paste**.
+
+[NEXT]
+#### Solution
+
+Define a custom matcher.
 
 [NEXT]
 ```rust
@@ -1095,10 +1222,10 @@ fn is_json_object_with_key(arg: &str, key: &str) -> bool {
     match json::parse(str) {
         Ok(json_value) => match json_value {
             Object(object) => match object.get(key) {
-                Some(_) => true  // JSON object that contains key
-                None => false    // JSON object that does contain key
+                Some(_) => true // JSON object and has key
+                None => false   // JSON object but doesn't have key
             },
-            _ => false  // not a object (must be another JSON type)
+            _ => false  // not an object (must be another JSON type)
         },
         Err(_) => false  // not valid JSON
     }
@@ -1107,7 +1234,7 @@ fn is_json_object_with_key(arg: &str, key: &str) -> bool {
 
 [NEXT]
 ```rust
-fn ensure_current_time_field_is_returned() {
+fn ensure_num_records_field_is_returned() {
     // GIVEN:
     let mut mock_sender = MockResponseSender::default();
 
@@ -1115,19 +1242,22 @@ fn ensure_current_time_field_is_returned() {
     request_handler(&mock_sender);
 
     // THEN:
-    // we expect a "time" field to be in the response JSON
+    // expect a "num_records" field to be in the response JSON
     assert(response_sender.send_response.called_with_pattern(
-        p!(is_json_object_with_key, "time")
+        p!(is_json_object_with_key, "num_records")
     ));
-    // we DO NOT expect a "time" field to be in the response JSON
+    // DO NOT expect an "error" field to be in the response JSON
     assert(!response_sender.send_response.called_with_pattern(
-        p!(is_json_object_with_key, "records")
+        p!(is_json_object_with_key, "error")
     ));
 }
 ```
 
 _note_
 Using the matcher then requires binding it to a parameter (using `p!`) and passing it to a mock assertion method.
+
+[NEXT]
+TODO: general takeaways
 
 
 [NEXT SECTION]
@@ -1138,10 +1268,12 @@ Using the matcher then requires binding it to a parameter (using `p!`) and passi
 [NEXT]
 TODO: mention that the vision for this library that this must be usable in `stable`
 
-TODO: there exist many other mocking libraries that use nightly compiler plugins
+_note_
+The vision for `double` is that must use `stable`.
 
 TODO: this makes supporting some features difficult
 
+here exist many other mocking libraries that use nightly compiler plugins. 
 
 [NEXT]
 ### Type Limitations
