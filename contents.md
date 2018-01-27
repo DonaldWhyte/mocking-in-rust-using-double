@@ -862,14 +862,6 @@ impl ConnectionPool for MockConnectionPool {
 [NEXT]
 TODO
 
-[NEXT]
-TODO: future work on them!
-
-[NEXT]
-### Generic Type Arguments
-
-TODO: there is some support for this, but it's a complex topic so out of scope of this talk
-
 
 [NEXT SECTION]
 ## 4. Pattern Matching
@@ -1241,11 +1233,11 @@ fn ensure_num_records_field_is_returned() {
 </code></pre>
 
 [NEXT]
-**Verbose** and hard to read test.
+**Verbose.**
 
-What if we want to test many requests with dozens of cases?
+What if we want to test many requests types/cases?
 
-Testing like this results in a lot of **copy/paste**.
+This approach would result in lots of **copy/paste**.
 
 [NEXT]
 #### Solution
@@ -1330,7 +1322,7 @@ Makes mocking `traits` from the standard library or external crates **impossible
 _note_
 The following other mocking libraries have similar feature sets to `double`, require nightly:
   * mockers (has partial support for stable)
-  * mock-derive
+  * mock_derive
   * galvanic-mock
   * mock_me
   * mocktopus
@@ -1341,7 +1333,24 @@ And none of them support mocking traits from the standard library or external cr
 **Rust stable and no code changes comes at a cost.**
 
 [NEXT]
-### Limitations
+### Main Limitation
+##### Traits with Generic Types
+
+```rust
+trait Comparator {
+   fn is_equal<T: PartialEq>(&self, a: &T, b: &T) -> bool;
+}
+```
+
+[NEXT]
+These can be mocked using `double`.
+
+Require extra boilerplate code.
+
+Details on why are out of scope of this talk.
+
+[NEXT]
+### All Limitations
 
 1. Argument types must implement `Clone` and `Eq`
 2. Return value types must implement `Clone`
@@ -1356,12 +1365,66 @@ I believe no existing mocking library, using nightly or otherwise, have properly
 [NEXT]
 Ongoing work on `double` to remove these limitations.
 
+_note_
+There are a lot of nightly features that would make removing these constraints much easier.
+
+However, I believe none of these constraints are impossible to solve using the current Rust stable compiler.
+
+As such, there are ongoing work on the library to remove these limitations.
+
 
 [NEXT SECTION]
 ## Fin
+![fin](images/fin.svg)
 
 [NEXT]
-TODO: conclusion
+Mocking can be used to isolate unit tests from exernal resources or complex dependencies.
+
+Mocking can be achieved in Rust by dummying `trait`s and functions.
+
+[NEXT]
+Mocking is controversial.
+
+Used incorrectly, tests with mocks overfit the implementation.
+
+Which introduces a huge burden on development.
+
+**Using pattern matching to loosen test constraints reduces overfitting.**
+
+_note_
+Mocking has often been a divisive topic.
+
+[NEXT]
+`double` is a crate for generating `trait`/function mocks.
+
+Wide array of mock behaviours and call assertions.
+
+First-class pattern matching support.
+
+_note_
+First-class pattern matching for writing non-brittle mocking tests.
+
+[NEXT]
+`double` supports stable and needs no prod code changes.
+
+Introduces constraints.
+
+Requires users to write more boilerplate code.
+
+_note_
+Ongoing work on the library to remove these limitations.
+
+[NEXT]
+### Alternative Mocking Libraries
+
+* [mockers](https://github.com/kriomant/mockers)
+* [mock_derive](https://github.com/DavidDeSimone/mock_derive)
+* [galvanic-mock](https://github.com/mindsbackyard/galvanic-mock)
+* [mock_me](https://github.com/craftytrickster/mock_me)
+* [mocktopus](https://github.com/CodeSandwich/Mocktopus)
+
+_note_
+For completeness, here's a list of other Rust mocking crates. In additional to checking out `double`, I encourage you to look at these too. Depending on your use case and preference, one of these might be more suitable for you.
 
 [NEXT]
 <!-- .slide: class="small-slide" -->
@@ -1391,16 +1454,16 @@ TODO: conclusion
 <div class="clear-col"></div>
 
 [NEXT]
+## Questions?
+
+[NEXT]
 ### Image Credits
 
-[Gregor Cresnar](https://www.flaticon.com/authors/gregor-cresnar)
-
-[Zurb](https://www.flaticon.com/authors/zurb)
-
-[Freepik](http://www.flaticon.com/authors/freepik)
-
-[Dave Gandy](http://fontawesome.io/)
-
+* [Gregor Cresnar](https://www.flaticon.com/authors/gregor-cresnar)
+* [Zurb](https://www.flaticon.com/authors/zurb)
+* [Freepik](http://www.flaticon.com/authors/freepik)
+* [Dave Gandy](http://fontawesome.io/)
+* [Online Web Fonts](https://www.onlinewebfonts.com/icon/548360)
 
 [NEXT SECTION]
 ## Appendix

@@ -154,7 +154,8 @@ img[alt="unit_testing"],
 img[alt="why_mock"],
 img[alt="double"],
 img[alt="pattern_matching"],
-img[alt="limitations"] {
+img[alt="limitations"],
+img[alt="fin"] {
     width: 200px;
     position: relative;
     top: 30px !important;
