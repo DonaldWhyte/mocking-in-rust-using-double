@@ -1159,7 +1159,15 @@ fn test_the_robot() {
 
 [NEXT]
 ##### Container Matchers
-TODO
+|                                    |                                                                                                               |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `is_empty`                         | argument implements `IntoIterator` and contains no elements.                                                  |
+| `has_length(size_matcher)`         | argument implements `IntoIterator` whose element count matches `size_matcher`.                                |
+| `contains(elem_matcher)`           | argument implements `IntoIterator` and contains at least one element that matches `elem_matcher`.             |
+| `each(elem_matcher)`               | argument implements `IntoIterator` and all of its elements match `elem_matcher`.                              |
+| `unordered_elements_are(elements)` | argument implements `IntoIterator` that contains the same elements as the vector `elements` (ignoring order). |
+| `when_sorted(elements)`            | argument implements `IntoIterator` that, when its elements are sorted, matches the vector `elements`.         |
+<!-- .element class="small-table-text" -->
 
 [NEXT]
 ##### String Matchers
