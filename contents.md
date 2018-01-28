@@ -895,8 +895,25 @@ Useful for testing code that takes function objects for runtime polymorphism.
 </pre></code>
 
 [NEXT]
+<!-- .slide: class="small-slide" -->
+Construct a `double::Mock` object directly.
+
+Format of generic params is: `<(arg_types...), retval_type>`.
+
+```rust
+let mock = Mock::<(i32), i32>::default();
+```
+
+[NEXT]
 **`mock_func!`**
 
+Wrap mock object in a closure.
+
+```rust
+mock_func!(&mock, retval_type, arg_types...);
+```
+
+[NEXT]
 <pre class="medium"><code data-noescape class="rust">#[test]
 fn test_function_used_correctly() {
     // GIVEN:
