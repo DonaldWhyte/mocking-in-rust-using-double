@@ -1129,7 +1129,10 @@ fn test_the_robot() {
     let robot = MockRobot::default();
     test_complex_business_logic_that_makes_decisions(&robot);
 <mark>    assert!(robot.speak.called_with_pattern(</mark>
-<mark>        matcher!( contains("Hello FOSDEM"), ge(0.7) )</mark>
+<mark>        matcher!(</mark>
+<mark>            p!(contains, "Hello FOSDEM"),</mark>
+<mark>            p!(ge, 0.7)</mark>
+<mark>        )</mark>
 <mark>    ));</mark>
 }
 </code></pre>
