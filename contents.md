@@ -32,7 +32,7 @@
 
 1. Unit Tests
 2. What is Mocking?
-3. Mocking in Rust with `double`
+3. Mocking in Rust
 4. Pattern Matching
 5. Library Constraints
 
@@ -326,10 +326,7 @@ Use the right tool for the job.
 [NEXT]
 ### Focus of Talk
 
-Behaviour verification with **spies** and **mocks**.
-
-_note_
-WHY? Mocks are the most flexible. They're a superset of stubs and spies.
+Behaviour verification with **spies**.
 
 [NEXT SECTION]
 ## 3. Mocking in Rust
@@ -347,7 +344,7 @@ Predicting profit of a stock portfolio over time.
 
 ```rust
 pub trait ProfitModel {
-    fn profit_at(timestamp: u64) -> f64;
+    fn profit_at(&self, timestamp: u64) -> f64;
 }
 ```
 
@@ -414,7 +411,7 @@ Not rely on an external environment.
 **`mock_trait!`**
 
 <pre><code data-noescape class="rust">pub trait ProfitModel {
-    fn profit_at(timestamp: u64) -> f64;
+    fn profit_at(&self, timestamp: u64) -> f64;
 }
 
 <mark>mock_trait!(</mark>
@@ -440,7 +437,7 @@ mock_trait!(
 Generate implementations of all methods in mock `struct`.
 
 <pre><code data-noescape class="rust">pub trait ProfitModel {
-    fn profit_at(timestamp: u64) -> f64;
+    fn profit_at(&self, timestamp: u64) -> f64;
 }
 
 mock_trait!(
@@ -617,7 +614,7 @@ fn using_closure_to_compute_return_value() {
   let profit_over_time = predict_profit_over_time(&mock, 0, 3);
 
   // THEN:
-<mark>  assert_eq!(vec!(0, 6, 11), profit_over_time);</mark>
+<mark>  assert_eq!(vec!(1, 6, 11), profit_over_time);</mark>
 }
 </code></pre>
 
@@ -1037,9 +1034,9 @@ fn test_the_robot() {
 ##### String Matchers
 |                       |                                                   |
 | --------------------- | ------------------------------------------------- |
-| `contains(string)`    | argument contains `string` as a sub-string.       |
+| `has_substr(string)`  | argument contains `string` as a sub-string.       |
 | `starts_with(prefix)` | argument starts with string `prefix`.             |
-| `starts_with(suffix)` | argument ends with string `suffix`.               |
+| `ends_with(suffix)`   | argument ends with string `suffix`.               |
 | `eq_nocase(string)`   | argument is equal to `string`, ignoring case.     |
 | `ne_nocase(value)`    | argument is not equal to `string`, ignoring case. |
 <!-- .element class="medium-table-text" -->
@@ -1093,7 +1090,7 @@ fn test_the_robot() {
     test_complex_business_logic_that_makes_decisions(&robot);
 <mark>    assert!(robot.speak.called_with_pattern(</mark>
 <mark>        matcher!(</mark>
-<mark>            p!(contains, "Hello FOSDEM"),</mark>
+<mark>            p!(has_substr, "FOSDEM"),</mark>
 <mark>            p!(ge, 0.7)</mark>
 <mark>        )</mark>
 <mark>    ));</mark>
@@ -1360,8 +1357,7 @@ And none of them support mocking traits from the standard library or external cr
 
 1. Argument types must implement `Clone` and `Eq`
 2. Return value types must implement `Clone`
-3. Private `trait`s cannot be mocked
-4. Limited support for generic traits
+3. Limited support for generic traits
 
 _note_
 (1) and (2) are constraints caused by the current implementation of `double`.
