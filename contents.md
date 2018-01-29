@@ -22,7 +22,7 @@
     <li>Software Engineer @ <strong>Engineers Gate</strong></li>
     <li>Real-time trading systems</li>
     <li>Scalable data infrastructure</li>
-    <li>C++ developer and Rust enthusiast</li>
+    <li>Python/C++/Rust developer</li>
   </ul>
 </div>
 <div class="clear-col"></div>
@@ -35,7 +35,7 @@ Empahsise background building high-performance enterprise software in C++ for se
 [NEXT]
 ## Outline
 
-1. Unit Testing in Rust
+1. Unit Tests
 2. Why Mock?
 3. Mocking in Rust with `double`
 4. Pattern Matching
@@ -43,7 +43,7 @@ Empahsise background building high-performance enterprise software in C++ for se
 
 
 [NEXT SECTION]
-## 1. Unit Testing
+## 1. Unit Tests
 
 ![unit_testing](images/unit_testing.svg)
 
@@ -294,7 +294,7 @@ Souce: https://martinfowler.com/articles/mocksArentStubs.html
 <div class="left-col">
   <h4>State Verification</h4>
   <p>
-    Test code by asserting on the its and its collaboator's <strong>post-test state</strong>.
+    Test code by asserting its and its collaboator's <strong>post-test state</strong>.
   </p>
   <hr />
   <ul>
@@ -305,7 +305,7 @@ Souce: https://martinfowler.com/articles/mocksArentStubs.html
 <div class="right-col">
   <h4>Behaviour Verification</h4>
   <p>
-    Test code by asserting on its <strong>interaction</strong> with its collaborators.
+    Test code by asserting its <strong>interaction</strong> with its collaborators.
   </p>
   <hr />
   <ul>
@@ -320,7 +320,9 @@ Of these kinds of doubles, only mocks insist upon behavior verification.
 Souce: https://martinfowler.com/articles/mocksArentStubs.html
 
 [NEXT]
-TODO: empahsise use cases
+Both techniques are useful.
+
+Use the right tool for the job.
 
 [NEXT]
 Behaviour verification with **mocks** is the focus of this talk.
@@ -339,13 +341,13 @@ WHY? Mocks are the most flexible. They're a superset of stubs and spies.
 ![coin_flip](images/coin-flip.jpg)
 
 * A simple game to flip a coin
-* `CoinFlipper` class implements the game
+* `flip_coin()` function implements the game
 * It interacts with a random number generator
-* We can change a number generator at runtime
-* Goal is to **test** `CoinFlipper`
+* We pass in the generator to use 
+* Goal is to **test** `flip_coin()`
 
 _note_
-We can change a number generator at runtime, using dependency injection
+We specify a generator to use during setup. We use dependency injection to TODO.
 
 [NEXT]
 ## Interfaces
@@ -363,33 +365,18 @@ pub enum CoinFlip {
 ```
 
 [NEXT]
-## Implementation
+## Code Under Test
 
 ```rust
-pub struct CoinFlipper {
-    rng: Rng,
-}
-
-impl CoinFlipper {
-    pub fn new(rng: Rng) -> CoinFlipper {
-        CoinFlipper {
-            rng: rng
-        }
-    }
-
-    pub fn flip_coin(&mut self) -> {
-        let r = rng.next_f64();
-        if r < 0.5 {
-            CoinFlip::Heads
-        } else {
-            CoinFlip::Tails
-        }
+pub fn flip_coin<R: Rng>(rng: &mut R) -> CoinFlip {
+    let r = rng.next_f64();
+    if r < 0.5 {
+        CoinFlip::Heads
+    } else {
+        CoinFlip::Tails
     }
 }
 ```
-<!-- .element class="medium" -->
-
-TODO: write code and ensure it builds
 
 [NEXT]
 ## Playing the Game
@@ -401,11 +388,8 @@ fn play() {
     // Construct a particular RNG implementation
     let rng = SomeRngImplementation();
 
-    // Create a game
-    let mut game = CoinFlipper(rng);
+    let flip = flip_coin(&rng);
 
-    // Start playing
-    let flip = game.flip_coin();
     if flip == CoinFlip::Heads {
         println!("Heads!");
     } else {
@@ -419,9 +403,9 @@ fn play() {
 
 * One collaborator &mdash; `Rng`
 * Real RNG is non-deterministic
-* We want to test `CoinFlipper` produces both results
-  - we also want these tests to be repeatable
-  - without relying on an external environment
+* We want to test `flip_coin()` produces both results
+  - tests should be repeatable
+  - and not rely on an external environment
 
 [NEXT]
 <!-- .slide: class="large-slide" -->
@@ -434,35 +418,6 @@ fn play() {
 * flexible configuration of mock's **behaviour**
 * can make simple and complex **assertions** on mock calls
 * **pattern matching** for call arguments
-
-[NEXT]
-### Core Design Principles
-<br />
-(1) Rust stable first <!-- .element: class="fragment" data-fragment-index="1" -->
-
-(2) Requires no changes to production code <!-- .element: class="fragment" data-fragment-index="2" -->
-
-_note_
-Emphasise how these goals has had the biggest influence on the design of the
-library. It's at the core of the library and what differentiates it from other
-mocking libraries in Rust.
-
-Other Mocking Libraries
-
-Supports rust stable via code generation and less features:
-  - https://github.com/kriomant/mockers
-
-Supports Rust stable, but lots of code boilerplate and less features:
-  - https://github.com/iredelmeier/pseudo
-
-Require changing prod code (and thus, can't be used for external `traits`) and require nightly:
-  - https://github.com/craftytrickster/mock_me
-  - https://github.com/DavidDeSimone/mock_derive
-  - https://github.com/CodeSandwich/Mocktopus
-  - https://github.com/mindsbackyard/galvanic-mock
-
-[NEXT]
-How to use `double`?
 
 [NEXT]
 ## Defining Mock Collaborators
@@ -550,7 +505,7 @@ Emphasise this is the only boilerplate needed.
 Construct mock object:
 
 ```rust
-let rng = MockRng::default();
+let mut rng = MockRng::default();
 ```
 
 Configure behaviour:
@@ -571,12 +526,11 @@ assert_eq!(1, rng.next_f64.num_calls());
 <pre class="medium"><code data-noescape class="rust">#[test]
 fn test_coin_flipper_yielding_heads() {
     // GIVEN:
-<mark>    let rng = MockRng::default();</mark>
+<mark>    let mut rng = MockRng::default();</mark>
 <mark>    rng.next_f64.return_value(0.25);</mark>
 
     // WHEN:
-    let mut game = CoinFlipper::new(rng);
-    let flip = game.flip_coin();
+    let flip = flip_coin(&rng);
 
     // THEN:
     assert_eq!(CoinFlip::Heads, flip);
