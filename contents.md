@@ -1105,29 +1105,6 @@ Define your own.
 
 [**Examples in the README.**](https://github.com/DonaldWhyte/double/)
 
-[NEXT]
-### Interim Summary
-
-Mocking/behaviour verification can **overfit implementation**.
-
-Pattern matching **expands the asserted behaviour space**.
-
-Reduces overfitting.
-
-[NEXT]
-### However...
-
-Pattern matching tests are cumbersome to write manually.
-
-`double` has built-in support for patterns to make it easier.
-
-_note_
-Writing assertions that use pattern matching is often cumbersome to write.
-
-This encourages developers to use eact value matching and overfit the implementation, because it's easier.
-
-Mocking libraries like `double` have tooling to make this easy, encouraging developers to write looser assertions.
-
 
 [NEXT SECTION]
 ## 5. Library Constraints
@@ -1212,10 +1189,9 @@ Used incorrectly, behaviour verification overfits the implementation.
 
 Introducing a huge burden on development.
 
-Pattern matching loosens test constraints and reduces overfitting.
+Pattern matching **expands the asserted behaviour space**.
 
-_note_
-Mocking has often been a divisive topic.
+Reducing overfitting.
 
 [NEXT]
 `double` is a crate for generating `trait`/function mocks.
