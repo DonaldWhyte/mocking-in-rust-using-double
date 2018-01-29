@@ -937,8 +937,8 @@ Loosens test expectations, making them less brittle.
 [NEXT]
 **`called_with_pattern()`**
 
-<pre><code data-noescape class="rust">fn is_greater_than_or_equal_to_100(arg: i32) -> bool {
-    arg >= 100
+<pre><code data-noescape class="rust">fn is_greater_than_or_equal_to_100(arg: &i32) -> bool {
+    *arg >= 100
 }
 
 #[test]
