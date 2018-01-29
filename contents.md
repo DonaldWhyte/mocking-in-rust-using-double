@@ -453,18 +453,13 @@ mock_trait!(
 
 ```rust
 impl TraitToMock for NameOfMockStruct {
-
   mock_method!(
     method1_name(&self, arg1_type, ..., argM_type) -> return_type);
-
+      .
+      .
+      .
   mock_method!(
-    method2_name(&mut self, arg1_type, ..., argM_type) -> return_type);
-
-  ...
-
-  mock_method!(
-    methodN_name(&mut self, arg1_type, ..., argM_type) -> return_type);
-
+    methodN_name(&self, arg1_type, ..., argN_type) -> return_type);
 }
 ```
 <!-- .element class="medium-large" -->
@@ -738,19 +733,6 @@ expands to:
 ```rust
 let mock = Mock::<(i32), i32>::default();
 let mock_fn = |arg1: i32| -> i32 { mock.call(arg1) };
-```
-
-[NEXT]
-**`mock_func!`**
-
-```rust
-mock_func!(
-    mock_obj_var,
-    mock_func_var,
-    retval_type,
-    arg1_type,
-    ...,
-    argN_type);
 ```
 
 [NEXT]
@@ -1044,7 +1026,6 @@ fn test_the_robot() {
 [NEXT]
 ### Composite Matchers
 
-[NEXT]
 Assert that a single arg should match many patterns.
 
 ```rust
@@ -1056,16 +1037,6 @@ assert!(robot.move_forward.called_with_pattern(
     ))
 ));
 ```
-
-[NEXT]
-### Composite Matchers
-
-|                            |                                                    |
-| -------------------------- | -------------------------------------------------- |
-| `all_of(vec!(m1, ... mn))` | argument matches all of the matchers `m1` to `mn`. |
-| `any_of(vec!(m1, ... mn))` | matches at least one of the matchers `m1` to `mn`. |
-| `not(m)`                   | argument doesn't match matcher `m`.                |
-<!-- .element class="medium-table-text" -->
 
 [NEXT]
 ### Methods with Multiple Arguments
