@@ -338,7 +338,7 @@ WHY? Mocks are the most flexible. They're a superset of stubs and spies.
 
 [NEXT]
 ## Coin Flipper
-![coin_flip](images/coin-flip.jpg)
+![coin_flip](images/coin_flip.jpg)
 
 * A simple game to flip a coin
 * `flip_coin()` function implements the game
@@ -399,7 +399,7 @@ fn play() {
 ```
 
 [NEXT]
-![coin_flip_collaborators](images/coin-flip-collaborators.png)
+![coin_flip_collaborators](images/coin_flip_collaborators.png)
 
 * One collaborator &mdash; `Rng`
 * Real RNG is non-deterministic
@@ -502,6 +502,8 @@ _note_
 Emphasise this is the only boilerplate needed.
 
 [NEXT]
+## Using Generated Mocks in Tests
+
 Construct mock object:
 
 ```rust
@@ -516,13 +518,11 @@ rng.next_f64.return_value(0.25);
 
 Assert mock was called:
 
-```
+```rust
 assert_eq!(1, rng.next_f64.num_calls());
 ```
 
 [NEXT]
-## Using Generated Mocks in Tests
-
 <pre class="medium"><code data-noescape class="rust">#[test]
 fn test_coin_flipper_yielding_heads() {
     // GIVEN:
@@ -554,40 +554,50 @@ to make a mock return special value /invoke special functions when specific
 arguments are passed in.
 
 [NEXT]
+Predicting profit of a stock portfolio over time.
+
 ```rust
-pub trait ProfitForecaster {
+pub trait ProfitModel {
     fn profit_at(timestamp: u64) -> f64;
 }
 
-pub fn forecast_profit_over_time(&forecaster: &ProfitForecaster,
+pub fn predict_profit_over_time(&model: &ProfitModel,
                                  start: u64,
                                  end: u64) -> Vec<f64>
 {
   (start..end)
-      .map(|t| forecaster.profit_at(t))
+      .map(|t| model.profit_at(t))
       .collect()
 }
 ```
 
 [NEXT]
-```
+![predicter_collaborators](images/predicter_collaborators.png)
+
+* Mock `ProfitModel`
+* Test `predict_profit_over_time()`
+
+[NEXT]
+```rust
 mock_trait!(
-    MockForecaster,
+    MockModel,
     profit_at(u64) -> f64);
 
-impl ProfitForecaster for MockForecaster {
+impl ProfitModel for MockModel {
     mock_method!(profit_at(&self, timestamp: u64) -> f64);
 }
 ```
 
 [NEXT]
+### Default Return Value
+
 <pre><code data-noescape class="rust">#[test]
 fn no_return_value_specified() {
   // GIVEN:
-  let mock = MockForecaster::default();
+  let mock = MockModel::default();
 
   // WHEN:
-  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
+  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
 
   // THEN:
   // default value of return type is used if no value is specified
@@ -596,14 +606,16 @@ fn no_return_value_specified() {
 </code></pre>
 
 [NEXT]
+### One Return Value for All Calls
+
 <pre><code data-noescape class="rust">#[test]
 fn single_return_value() {
   // GIVEN:
-  let mock = MockForecaster::default();
+  let mock = MockModel::default();
 <mark>  mock.profit_at.return_value(10);</mark>
 
   // WHEN:
-  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
+  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
 
   // THEN:
 <mark>  assert_eq!(vec!(10, 10, 10), profit_over_time);</mark>
@@ -611,14 +623,16 @@ fn single_return_value() {
 </code></pre>
 
 [NEXT]
+### Sequence of Return Values
+
 <pre><code data-noescape class="rust">#[test]
 fn multiple_return_values() {
   // GIVEN:
-  let mock = MockForecaster::default();
+  let mock = MockModel::default();
 <mark>  mock.profit_at.return_values(1, 5, 10);</mark>
 
   // WHEN:
-  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
+  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
 
   // THEN:
 <mark>  assert_eq!(vec!(1, 5, 10), profit_over_time);</mark>
@@ -626,15 +640,17 @@ fn multiple_return_values() {
 </code></pre>
 
 [NEXT]
+### Return Values for Specific Args
+
 <pre><code data-noescape class="rust">#[test]
 fn return_value_for_specific_arguments() {
   // GIVEN:
-  let mock = MockForecaster::default();
+  let mock = MockModel::default();
 <mark>  mock.profit_at.return_value(10);</mark>
 <mark>  mock.profit_at.return_value_for((1), 5);</mark>
 
   // WHEN:
-  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
+  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
 
   // THEN:
 <mark>  assert_eq!(vec!(10, 5, 10), profit_over_time);</mark>
@@ -642,35 +658,22 @@ fn return_value_for_specific_arguments() {
 </code></pre>
 
 [NEXT]
+### Use Closure to Compute Return Value
+
 <pre><code data-noescape class="rust">#[test]
 fn using_closure_to_compute_return_value() {
   // GIVEN:
-  let mock = MockForecaster::default();
+  let mock = MockModel::default();
 <mark>  mock.profit_at.use_closure(|t| t * 5 + 1);</mark>
 
   // WHEN:
-  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
+  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
 
   // THEN:
 <mark>  assert_eq!(vec!(0, 6, 11), profit_over_time);</mark>
 }
 </code></pre>
 
-[NEXT]
-<pre><code data-noescape class="rust">#[test]
-fn using_closure_for_specific_return_value() {
-  // GIVEN:
-  let mock = MockForecaster::default();
-<mark>  mock.profit_at.return_value(10);</mark>
-<mark>  mock.profit_at.use_closure_for((2), |t| t * 5 + 1);</mark>
-
-  // WHEN:
-  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
-
-  // THEN:
-<mark>  assert_eq!(vec!(0, 10, 11), profit_over_time);</mark>
-}
-</code></pre>
 
 [NEXT]
 ### Precedence Order
@@ -698,13 +701,15 @@ Verify mocks are called:
 * with the right arguments
 
 [NEXT]
+#### Assert Calls Made
+
 <pre><code data-noescape class="rust">#[test]
 fn asserting_mock_was_called() {
   // GIVEN:
-  let mock = MockForecaster::default();
+  let mock = MockModel::default();
 
   // WHEN:
-  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
+  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
 
   // THEN:
   // called at least once
@@ -717,13 +722,15 @@ fn asserting_mock_was_called() {
 </code></pre>
 
 [NEXT]
+#### Tighter Call Assertions
+
 <pre class="medium"><code data-noescape class="rust">#[test]
 fn asserting_mock_was_called_with_precise_constraints() {
   // GIVEN:
-  let mock = MockForecaster::default();
+  let mock = MockModel::default();
 
   // WHEN:
-  let profit_over_time = forecast_profit_over_time(&mock, 0, 3);
+  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
 
   // THEN:
   // called at least once with argument 0 and 1, in that order
@@ -1358,7 +1365,7 @@ The vision for `double` is that must work with stable Rust. It must don't impose
 [NEXT]
 #### 1. Rust Stable First
 
-Almost all mocking libraries require nightly.
+Most mocking libraries require nightly.
 
 _note_
 The vast majority of other mocking libraries that use nightly compiler plugins. This gives them more flexibility at the cost of restricting the user to nightly Rust.
@@ -1366,7 +1373,7 @@ The vast majority of other mocking libraries that use nightly compiler plugins. 
 [NEXT]
 #### 2. No Changes to Production Code Required
 
-All current mocking libraries require users changes to production code.
+Most (all?) mocking libraries require changes to prod code.
 
 Makes mocking `traits` from the standard library or external crates **impossible**.
 
@@ -1494,11 +1501,6 @@ For completeness, here's a list of other Rust mocking crates. In additional to c
 
 [NEXT SECTION]
 ## Appendix
-
-[NEXT]
-### Classist vs. Mockist
-
-TODO
 
 [NEXT]
 ### Image Credits

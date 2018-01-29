@@ -138,6 +138,10 @@ img[alt="coin_flip_collaborators"] {
     width: 450px;
 }
 
+img[alt="predicter_collaborators"] {
+    width: 550px;
+}
+
 .behaviour_space_wrapper {
     float: left;
 }
