@@ -60,18 +60,21 @@ Correctness in our programs means that our code does what we intend for it to do
 (source: https://doc.rust-lang.org/book/second-edition/ch11-00-testing.html)
 
 [NEXT]
-Create library:
+Create library: `cargo new`
 
 ```bash
 cargo new some_lib
 cd some_lib
 ```
 
+[NEXT]
 Test fixture automatically generated:
 
-```rust
+```bash
 > cat src/lib.rs
+```
 
+```rust
 #[cfg(test)]
 mod tests {
     #[test]
@@ -80,10 +83,9 @@ mod tests {
     }
 }
 ```
-<!-- .element class="small" -->
 
 [NEXT]
-Run all tests:
+`cargo test`
 
 ```cpp
 > cargo test
@@ -119,7 +121,15 @@ pub fn add_two(num: i32) -> i32 {
 </code></pre>
 
 _note_
-Annotate module so it's only built with `cargo test`.
+Annotate tests module with `#[cfg(test)]` so it's only built with `cargo test`.
+
+This module will also _run_ when `cargo test` is invoked.
+
+```
+This is the automatically generated test module. The attribute cfg stands for configuration, and tells Rust that the following item should only be included given a certain configuration option. In this case, the configuration option is test, provided by Rust for compiling and running tests. By using this attribute, Cargo only compiles our test code if we actively run the tests with cargo test. This includes any helper functions that might be within this module, in addition to the functions annotated with #[test].
+```
+
+Source: https://doc.rust-lang.org/book/second-edition/ch11-03-test-organization.html
 
 [NEXT]
 Add isolated test functions to private `tests` module.
@@ -266,16 +276,16 @@ they:
     * easy to change
 
 [NEXT]
-## Solution: Use Test fble
+## Solution: Use Test Double
 
 ![stunt_double](images/brad_double_small.jpg)
 
 [NEXT]
-A **test double** is an object or function substituted for a "real" (production ready) object during testing.
+Term originates from a notion of a _"stunt double"_ in films.
+
+A **test double** is an object or function substituted for a "real" (production ready) code during testing.
 
 Should appear exactly the same as a **"real"** production instance to its clients (collaborators).
-
-Term originates from a notion of a _"stunt double"_ in films.
 
 _note_
 This is how we eliminate these unwanted dependencies from our tests.
@@ -329,6 +339,9 @@ _note_
 Of these kinds of doubles, only mocks insist upon behavior verification.
 
 Souce: https://martinfowler.com/articles/mocksArentStubs.html
+
+[NEXT]
+TODO: empahsise use cases
 
 [NEXT]
 Behaviour verification with **mocks** is the focus of this talk.
@@ -396,6 +409,8 @@ impl CoinFlipper {
 ```
 <!-- .element class="medium" -->
 
+TODO: write code and ensure it builds
+
 [NEXT]
 ## Playing the Game
 
@@ -433,21 +448,19 @@ fn play() {
 **Let's mock `Rng`.**
 
 [NEXT]
-## Double to the Rescue!
+## `double` to the Rescue!
 
-[NEXT]
 * **generate** mock trait implementations using macros
 * flexible configuration of mock's **behaviour**
 * can make simple and complex **assertions** on mock calls
 * **pattern matching** for call arguments
 
 [NEXT]
-<!-- .slide: class="large-slide" -->
-**Two Core Design Principles**
+### Core Design Principles
+<br />
+(1) Rust stable first <!-- .element: class="fragment" data-fragment-index="1" -->
 
-[NEXT]
-<!-- .slide: class="large-slide" -->
-**1. Rust Stable First**
+(2) Requires no changes to production code <!-- .element: class="fragment" data-fragment-index="2" -->
 
 _note_
 Emphasise how these goals has had the biggest influence on the design of the
@@ -469,8 +482,7 @@ Require changing prod code (and thus, can't be used for external `traits`) and r
   - https://github.com/mindsbackyard/galvanic-mock
 
 [NEXT]
-<!-- .slide: class="large-slide" -->
-**2. No Changes to Production Code**
+How to use `double`?
 
 [NEXT]
 ## Defining Mock Collaborators
@@ -555,6 +567,25 @@ _note_
 Emphasise this is the only boilerplate needed.
 
 [NEXT]
+Construct mock object:
+
+```rust
+let rng = MockRng::default();
+```
+
+Configure behaviour:
+
+```rust
+rng.next_f64.return_value(0.25);
+```
+
+Assert mock was called:
+
+```
+assert_eq!(1, rng.next_f64.num_calls());
+```
+
+[NEXT]
 ## Using Generated Mocks in Tests
 
 <pre class="medium"><code data-noescape class="rust">#[test]
@@ -569,9 +600,6 @@ fn test_coin_flipper_yielding_heads() {
 
     // THEN:
     assert_eq!(CoinFlip::Heads, flip);
-
-<mark>    assert!(rng.next_f64.called());</mark>
-<mark>    assert!(rng.next_f64.called_with(()));</mark>
 <mark>    assert_eq!(1, rng.next_f64.num_calls());</mark>
 }
 </code></pre>
@@ -728,111 +756,12 @@ fn using_closure_for_specific_return_value() {
 <!-- .element class="medium-table-text" -->
 
 [NEXT]
-### `Option` Helpers
+### THEN: Code Used Mock as Expected
 
-Use `return_some` and `return_none` for `Option<T>`.
+Verify mocks are called:
 
-```rust
-struct User { };
-
-pub trait UserStore {
-    fn get_user(&self, id: u64) -> Option<User>;
-}
-
-mock_trait!(
-    MockUserStore,
-    get_user(u64) -> Option<User>);
-
-impl UserStore for MockUserStore {
-    mock_method!(get_user(&self, id: u64) -> Option<User>);
-}
-```
-
-[NEXT]
-<pre><code data-noescape class="rust">#[test]
-fn returning_none() {
-  // GIVEN:
-  let store = MockUserStore::default();
-<mark>  store.get_user.return_none();</mark>
-
-  // WHEN:
-  let output = store.get_user(42);
-
-  // THEN:
-<mark>  assert_eq!(None, output);</mark>
-}
-</code></pre>
-
-[NEXT]
-<pre><code data-noescape class="rust">#[test]
-fn returning_some() {
-  // GIVEN:
-  let store = MockUserStore::default();
-<mark>  store.get_user.return_some(User{});</mark>
-
-  // WHEN:
-  let output = store.get_user(42);
-
-  // THEN:
-<mark>  assert_eq!(Some(User{}), output);</mark>
-}
-</code></pre>
-
-[NEXT]
-### `Result` Helpers
-
-Use `return_ok` and `return_err` for `Result<T>`.
-
-```rust
-struct User { };
-
-pub trait UserStore {
-    fn get_user(&self, id: u64) -> Result<User, String>;
-}
-
-mock_trait!(
-    MockUserStore,
-    get_user(u64) -> Result<User, String>);
-
-impl UserStore for MockUserStore {
-    mock_method!(get_user(&self, id: u64) -> Result<User, String>);
-}
-```
-
-[NEXT]
-<pre><code data-noescape class="rust">#[test]
-fn returning_error() {
-  // GIVEN:
-  let store = MockUserStore::default();
-<mark>  store.get_user.return_err("could not connect to DB");</mark>
-
-  // WHEN:
-  let output = store.get_user(42);
-
-  // THEN:
-<mark>  assert_eq!(Err("could not connect to DB"), output);</mark>
-}
-</code></pre>
-
-[NEXT]
-<pre><code data-noescape class="rust">#[test]
-fn returning_ok() {
-  // GIVEN:
-  let store = MockUserStore::default();
-<mark>  store.get_user.return_ok(User{});</mark>
-
-  // WHEN:
-  let output = store.get_user(42);
-
-  // THEN:
-<mark>  assert_eq!(Ok(User{}), output);</mark>
-}
-</code></pre>
-
-[NEXT]
-### THEN: Asserting Mock Was Used in the Expected Way
-
-Verify mocks are called the right number of times and with the right arguments.
+* the right number of times
+* with the right arguments
 
 [NEXT]
 <pre><code data-noescape class="rust">#[test]
@@ -887,7 +816,7 @@ Useful for testing code that takes function objects for runtime polymorphism.
 <pre class="medium"><code data-noescape class="rust">fn generate_sequence(
     <mark>func: &Fn(i32) -> i32,</mark>
     min: i32,
-    max: i32) -> Vec<i32>
+    max: i32) -> Vec&lt;i32&gt;
 {
     // exclusive range
     (min..max).map(func).collect()
@@ -901,6 +830,9 @@ Construct a `double::Mock` object directly.
 Format of generic params is: `<(arg_types...), retval_type>`.
 
 ```rust
+extern crate double;
+use double::mock;
+
 let mock = Mock::<(i32), i32>::default();
 ```
 
@@ -972,8 +904,8 @@ pub struct WorldState {
 }
 
 impl Robot {
-    pub fn new(actuator: Actuator) -> Robot {
-        Robot { actuator: &mut Actuator }
+    pub fn new(actuator: &mut Actuator) -> Robot {
+        Robot { actuator: actuator }
     }
 
     pub fn take_action(state: WorldState) {
@@ -1108,8 +1040,29 @@ fn test_the_robot() {
 </code></pre>
 
 [NEXT]
+Parametrised matcher functions:
+
+```rust
+/// Matcher that matches if `arg` is greater than or equal to
+/// `target_val`.
+pub fn ge<T: PartialEq + PartialOrd>(
+    arg: &T,
+    target_val: T) -> bool
+{
+    *arg >= target_val
+}
+```
+
+[NEXT]
 Use `p!` to generate matcher functions on-the-fly.
 
+```rust
+use double::matcher::ge;
+
+let is_greater_than_or_equal_to_100 = p!(ge, 100);
+```
+
+[NEXT]
 <pre><code data-noescape class="rust"><mark>use double::matcher::*;</mark>
 
 #[test]
@@ -1204,6 +1157,15 @@ assert!(robot.move_forward.called_with_pattern(
 | `any_of(vec!(m1, ... mn))` | matches at least one of the matchers `m1` to `mn`. |
 | `not(m)`                   | argument doesn't match matcher `m`.                |
 <!-- .element class="medium-table-text" -->
+
+[NEXT]
+### Methods with Multiple Arguments
+
+<pre><code data-noescape class="rust">pub trait Actuator {
+    fn move_forward(&mut self, amount: i32);
+<mark>    fn speak(&mut self, message: &str, volume: u32);</mark>
+}
+</code></pre>
 
 [NEXT]
 **`matcher!`**
@@ -1326,17 +1288,13 @@ fn ensure_num_records_field_is_returned() {
 
     // THEN:
 <mark>    assert!(mock_sender.send_response.called_with_pattern(</mark>
-<mark>        p!(contains, "\"num_records\":")</mark>
+<mark>        p!(contains, "\"num_records\"")</mark>
 <mark>    ));</mark>
 }
 </code></pre>
 
 [NEXT]
-Test is still tightly bound to implementation.
-
-Will break if JSON spacing/formatting changes.
-
-**No guarantee "num_records" is a key on the top-level JSON object.**
+No guarantee `num_records` is stored in the root JSON object.
 
 [NEXT]
 Could extract the call arg, parse it as JSON and check the field exists.
@@ -1355,7 +1313,7 @@ fn ensure_num_records_field_is_returned() {
     match json::parse(calls[0]) {
         Ok(json_value) => match json_value {
             Object(object) => match object.get("num_records") {
-                Some(_) => true  // JSON object and has key -- success!
+                Some(_) => {}  // JSON object and has key -- success!
                 None => panic!("JSON object but doesn't have key");
             },
             _ => panic!("not an object (must be another JSON type)");
@@ -1397,25 +1355,22 @@ fn is_json_object_with_key(arg: &str, key: &str) -> bool {
 ```
 
 [NEXT]
-```rust
-fn ensure_num_records_field_is_returned() {
+<pre><code data-noescape class="rust">fn ensure_num_records_field_is_returned() {
     // GIVEN:
     let mut mock_sender = MockResponseSender::default();
-
     // WHEN:
     request_handler(&mock_sender);
-
     // THEN:
     // expect a "num_records" field to be in the response JSON
     assert(response_sender.send_response.called_with_pattern(
-        p!(is_json_object_with_key, "num_records")
+<mark>        p!(is_json_object_with_key, "num_records")</mark>
     ));
     // DO NOT expect an "error" field to be in the response JSON
     assert(!response_sender.send_response.called_with_pattern(
-        p!(is_json_object_with_key, "error")
+<mark>        p!(is_json_object_with_key, "error")</mark>
     ));
 }
-```
+</code></pre>
 
 _note_
 Using the matcher then requires binding it to a parameter (using `p!`) and passing it to a mock assertion method.
@@ -1427,7 +1382,7 @@ Mocking/behaviour verification can **overfit implementation**.
 
 Pattern matching **expands the asserted behaviour space**.
 
-Reducing overfitting
+Reduces overfitting.
 
 [NEXT]
 ### However...
