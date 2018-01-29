@@ -31,7 +31,7 @@
 ## Outline
 
 1. Unit Tests
-2. Why Mock?
+2. What is Mocking?
 3. Mocking in Rust with `double`
 4. Pattern Matching
 5. Library Constraints
@@ -162,7 +162,7 @@ Focus of talk is mocking, so these are not covered here.
 
 
 [NEXT SECTION]
-## 2. Why Mock?
+## 2. What is Mocking?
 
 ![why_mock](images/why_mock.svg)
 
@@ -304,6 +304,7 @@ Souce: https://martinfowler.com/articles/mocksArentStubs.html
   </p>
   <hr />
   <ul>
+    <li>Spies</li>
     <li>Mocks</li>
   </ul>
 </div>
@@ -311,6 +312,8 @@ Souce: https://martinfowler.com/articles/mocksArentStubs.html
 
 _note_
 Of these kinds of doubles, only mocks insist upon behavior verification.
+
+Spies almost support this verification.
 
 Souce: https://martinfowler.com/articles/mocksArentStubs.html
 
@@ -320,7 +323,9 @@ Both techniques are useful.
 Use the right tool for the job.
 
 [NEXT]
-Behaviour verification with **mocks** is the focus of this talk.
+### Focus of Talk
+
+Behaviour verification with **spies** and **mocks**.
 
 _note_
 WHY? Mocks are the most flexible. They're a superset of stubs and spies.
@@ -655,9 +660,9 @@ fn asserting_mock_was_called() {
   // called at least once
 <mark>  assert!(mock.profit_at.called());</mark>
   // called with argument 1 at least once
-<mark>  assert!(mock.profit_at.called_with((1));</mark>
+<mark>  assert!(mock.profit_at.called_with((1)));</mark>
   // called at least once with argument 1 and 0
-<mark>  assert!(mock.profit_at.has_calls((1), (0));</mark>
+<mark>  assert!(mock.profit_at.has_calls((1), (0)));</mark>
 }
 </code></pre>
 
@@ -675,7 +680,7 @@ fn asserting_mock_was_called_with_precise_constraints() {
   // THEN:
   // Called exactly three times, once with 0, once with 1 and once
   // once with 2.
-<mark>  assert!(mock.profit_at.has_calls_exactly((1), (0), (2));</mark>
+<mark>  assert!(mock.profit_at.has_calls_exactly((1), (0), (2)));</mark>
 }
 </code></pre>
 
@@ -692,11 +697,11 @@ fn asserting_mock_was_called_with_precise_constraints() {
 
   // THEN:
   // Called at least once with argument 0 and 1, in that order.
-<mark>  assert!(mock.profit_at.has_calls_in_order((0), (1));</mark>
+<mark>  assert!(mock.profit_at.has_calls_in_order((0), (1)));</mark>
   // Called exactly three times, once with 0, once with 1 and
   // once with 2, and the calls were made in the specified order.
 <mark>  assert!(mock.profit_at.has_calls_exactly_in_order(</mark>
-<mark>      (0), (1), (2));</mark>
+<mark>      (0), (1), (2)));</mark>
 }
 </code></pre>
 
@@ -960,7 +965,7 @@ pub fn ge<T: PartialEq + PartialOrd>(
 ```
 
 [NEXT]
-Use `p!` to generate matcher functions on-the-fly.
+Use `p!` to generate matcher closures on-the-fly.
 
 ```rust
 use double::matcher::ge;
@@ -989,7 +994,6 @@ fn test_the_robot() {
 |         |                                               |
 | ------- | --------------------------------------------- |
 | `any()` | argument can be any value of the correct type |
-<!-- .element class="medium-table-text" -->
 
 [NEXT]
 ##### Comparison Matchers
@@ -1057,6 +1061,8 @@ assert!(robot.move_forward.called_with_pattern(
 ```
 
 [NEXT]
+### Composite Matchers
+
 |                            |                                                    |
 | -------------------------- | -------------------------------------------------- |
 | `all_of(vec!(m1, ... mn))` | argument matches all of the matchers `m1` to `mn`. |
@@ -1383,18 +1389,16 @@ As such, there are ongoing work on the library to remove these limitations.
 ![fin](images/fin.svg)
 
 [NEXT]
-Mocking can be used to isolate unit tests from exernal resources or complex dependencies.
+Mocking is used to isolate unit tests from exernal resources or complex dependencies.
 
-Mocking can be achieved in Rust by dummying `trait`s and functions.
+Achieved in Rust by replacing `trait`s and functions.
 
 [NEXT]
-Mocking is controversial.
+Used incorrectly, behaviour verification overfits the implementation.
 
-Used incorrectly, tests with mocks overfit the implementation.
+Introducing a huge burden on development.
 
-Which introduces a huge burden on development.
-
-**Using pattern matching to loosen test constraints reduces overfitting.**
+Pattern matching loosens test constraints and reduces overfitting.
 
 _note_
 Mocking has often been a divisive topic.
@@ -1406,17 +1410,11 @@ Wide array of mock behaviours and call assertions.
 
 First-class pattern matching support.
 
-_note_
-First-class pattern matching for writing non-brittle mocking tests.
-
 [NEXT]
-`double` supports stable and needs no prod code changes.
+`double` supports stable and requires no code changes.
 
-Introduces constraints.
+Requires users to write slightly more boilerplate code.
 
-Requires users to write more boilerplate code.
-
-_note_
 Ongoing work on the library to remove these limitations.
 
 [NEXT]
