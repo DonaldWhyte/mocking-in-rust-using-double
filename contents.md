@@ -1,8 +1,8 @@
-# Mocking in Rust
+# Testing in Rust
+#### A Primer in Testing and Mocking
 
 <p>
-    <a href="http://donsoft.io">Donald Whyte</a>
-    / <a href="http://twitter.com/donald_whyte">@donald_whyte</a>
+  <a href="http://twitter.com/donald_whyte">@donald_whyte</a>
 </p>
 
 <div id="logo-notice">
@@ -1429,37 +1429,23 @@ And none of them support mocking traits from the standard library or external cr
 **Rust stable and no code changes comes at a cost.**
 
 [NEXT]
-### Main Limitation
-##### Traits with Generic Types
-
-```rust
-trait Comparator {
-   fn is_equal<T: PartialEq>(&self, a: &T, b: &T) -> bool;
-}
-```
-
-[NEXT]
-These can be mocked using `double`.
-
-Sometimes requires boilerplate to be added to production code.
-
-_note_
-The detailed reasons why this is currently the case is out of scope for this talk. Note that there is ongoing work on allowing these traits to be used without neeeding production code changes.
-
-Speak to me after this talk if you're interested in learning more about this.
-
-[NEXT]
-### All Limitations
+### Limitations
 
 1. Argument types must implement `Clone` and `Eq`
 2. Return value types must implement `Clone`
 3. Private `trait`s cannot be mocked
-4. Limited support for generic type arguments
+4. Limited support for generic traits
 
 _note_
 (1) and (2) are constraints caused by the current implementation of `double`.
 
 I believe no existing mocking library, using nightly or otherwise, have properly solved (3) and (4).
+
+Support for generic traits (4) in particular is a difficult problem to solve. It's possible with `double`, but it requires additional boilerplate code.
+
+Note that there is ongoing work on allowing these traits to be used without neeeding production code changes.
+
+Speak to me after this talk if you're interested in learning more about this.
 
 [NEXT]
 Ongoing work on `double` to remove these limitations.
@@ -1551,17 +1537,6 @@ For completeness, here's a list of other Rust mocking crates. In additional to c
 </div>
 <div class="clear-col"></div>
 
-[NEXT]
-## Questions?
-
-[NEXT]
-### Image Credits
-
-* [Gregor Cresnar](https://www.flaticon.com/authors/gregor-cresnar)
-* [Zurb](https://www.flaticon.com/authors/zurb)
-* [Freepik](http://www.flaticon.com/authors/freepik)
-* [Dave Gandy](http://fontawesome.io/)
-* [Online Web Fonts](https://www.onlinewebfonts.com/icon/548360)
 
 [NEXT SECTION]
 ## Appendix
@@ -1571,3 +1546,11 @@ For completeness, here's a list of other Rust mocking crates. In additional to c
 
 TODO
 
+[NEXT]
+### Image Credits
+
+* [Gregor Cresnar](https://www.flaticon.com/authors/gregor-cresnar)
+* [Zurb](https://www.flaticon.com/authors/zurb)
+* [Freepik](http://www.flaticon.com/authors/freepik)
+* [Dave Gandy](http://fontawesome.io/)
+* [Online Web Fonts](https://www.onlinewebfonts.com/icon/548360)
