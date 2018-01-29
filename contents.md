@@ -27,11 +27,6 @@
 </div>
 <div class="clear-col"></div>
 
-_note_
-TODO: intro to me, write down after saying out loud
-
-Empahsise background building high-performance enterprise software in C++ for several years.
-
 [NEXT]
 ## Outline
 
@@ -336,31 +331,17 @@ WHY? Mocks are the most flexible. They're a superset of stubs and spies.
 
 ![double](images/double.svg)
 
-[NEXT]
-## Coin Flipper
-![coin_flip](images/coin_flip.jpg)
+[NEXT] 
+![prediction](images/prediction.jpg)
 
-* A simple game to flip a coin
-* `flip_coin()` function implements the game
-* It interacts with a random number generator
-* We pass in the generator to use 
-* Goal is to **test** `flip_coin()`
-
-_note_
-We specify a generator to use during setup. We use dependency injection to TODO.
+Predicting profit of a stock portfolio over time.
 
 [NEXT]
 ## Interfaces
 
-```cpp
-// Simplified version of `Rng` trait in the `rand` crate
-pub trait Rng {
-    fn next_f64(&mut self) -> f64;
-}
-
-pub enum CoinFlip {
-    Heads,
-    Tails,
+```rust
+pub trait ProfitModel {
+    fn profit_at(timestamp: u64) -> f64;
 }
 ```
 
@@ -368,48 +349,49 @@ pub enum CoinFlip {
 ## Code Under Test
 
 ```rust
-pub fn flip_coin<R: Rng>(rng: &mut R) -> CoinFlip {
-    let r = rng.next_f64();
-    if r < 0.5 {
-        CoinFlip::Heads
-    } else {
-        CoinFlip::Tails
-    }
+pub fn predict_profit_over_time<M: ProfitModel>(
+    model: &M,
+    start: u64,
+    end: u64) -> Vec<f64>
+{
+    (start..end)
+        .map(|t| model.profit_at(t))
+        .collect()
 }
 ```
 
 [NEXT]
-## Playing the Game
-
-`flip` is either `Heads` or `Tails`.
+## Using Code
 
 ```rust
-fn play() {
-    // Construct a particular RNG implementation
-    let rng = SomeRngImplementation();
+fn predict() {
+    let model = SomeProfitModelImplementation::new(...);
 
-    let flip = flip_coin(&rng);
+    let profit_over_time = predict_profit_over_time(&model);
 
-    if flip == CoinFlip::Heads {
-        println!("Heads!");
-    } else {
-        println!("Tails!");
-    }
+    println!("Profit over time: {:?}", profit_over_time);
 }
 ```
 
 [NEXT]
-![coin_flip_collaborators](images/coin_flip_collaborators.png)
+We want to test `predict_profit_over_time()`.
 
-* One collaborator &mdash; `Rng`
-* Real RNG is non-deterministic
-* We want to test `flip_coin()` produces both results
-  - tests should be repeatable
-  - and not rely on an external environment
+Tests should be repeatable.
+
+Not rely on an external environment.
 
 [NEXT]
-<!-- .slide: class="large-slide" -->
-**Let's mock `Rng`.**
+![predicter_collaborators](images/predicter_collaborators.png)
+
+* One collaborator &mdash; `ProfitModel`
+* Predicting profit is hard...
+* ...real `ProfitModel` implementations use:
+  - external data sources (DBs, APIs, files, etc.)
+  - internal code dependencies with complex setup
+
+[NEXT]
+<!-- .slide: class="medium-slide" -->
+**Let's mock `ProfitModel`.**
 
 [NEXT]
 ## `double` to the Rescue!
@@ -425,13 +407,13 @@ fn play() {
 [NEXT]
 **`mock_trait!`**
 
-<pre><code data-noescape class="rust">pub trait Rng {
-    fn next_f64(&mut self) -> f64;
+<pre><code data-noescape class="rust">pub trait ProfitModel {
+    fn profit_at(timestamp: u64) -> f64;
 }
 
 <mark>mock_trait!(</mark>
-<mark>    MockRng,</mark>
-<mark>    next_f64() -> f64);</mark>
+<mark>    MockModel,</mark>
+<mark>    profit_at(u64) -> f64);</mark>
 </code></pre>
 
 [NEXT]
@@ -451,16 +433,16 @@ mock_trait!(
 
 Generate implementations of all methods in mock `struct`.
 
-<pre><code data-noescape class="rust">pub trait Rng {
-    fn next_f64(&mut self) -> f64;
+<pre><code data-noescape class="rust">pub trait ProfitModel {
+    fn profit_at(timestamp: u64) -> f64;
 }
 
 mock_trait!(
-    MockRng,
-    next_f64() -> f64);
+    MockModel,
+    profit_at(u64) -> f64);
 
-<mark>impl Rng for MockRng {</mark>
-<mark>    mock_method!(next_f64(&mut self) -> f64);</mark>
+<mark>impl ProfitModel for MockModel {</mark>
+<mark>    mock_method!(profit_at(&self, timestamp: u64) -> f64);</mark>
 <mark>}</mark>
 </code></pre>
 
@@ -490,11 +472,11 @@ Full code to generate a mock implementation of a `trait`:
 
 ```rust
 mock_trait!(
-    MockRng,
-    next_f64() -> f64);
+    MockModel,
+    profit_at(u64) -> f64);
 
-impl Rng for MockRng {
-    mock_method!(next_f64(&mut self) -> f64);
+impl ProfitModel for MockModel {
+    mock_method!(profit_at(&self, timestamp: u64) -> f64);
 }
 ```
 
@@ -507,86 +489,45 @@ Emphasise this is the only boilerplate needed.
 Construct mock object:
 
 ```rust
-let mut rng = MockRng::default();
+let model = MockModel::default();
 ```
 
 Configure behaviour:
 
 ```rust
-rng.next_f64.return_value(0.25);
+model.profit_at.return_value(10);
 ```
 
 Assert mock was called:
 
 ```rust
-assert_eq!(1, rng.next_f64.num_calls());
+assert_eq!(3, model.profit_at.num_calls());
 ```
 
 [NEXT]
-<pre class="medium"><code data-noescape class="rust">#[test]
-fn test_coin_flipper_yielding_heads() {
-    // GIVEN:
-<mark>    let mut rng = MockRng::default();</mark>
-<mark>    rng.next_f64.return_value(0.25);</mark>
+<pre><code data-noescape class="rust">#[test]
+fn test_profit_model_is_used_for_each_timestamp() {
+  // GIVEN:
+<mark>  let mock = MockModel::default();</mark>
+<mark>  mock.profit_at.return_value(10);</mark>
 
-    // WHEN:
-    let flip = flip_coin(&rng);
+  // WHEN:
+  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
 
-    // THEN:
-    assert_eq!(CoinFlip::Heads, flip);
-<mark>    assert_eq!(1, rng.next_f64.num_calls());</mark>
+  // THEN:
+  assert_eq!(vec!(10, 10, 10), profit_over_time);
+<mark>  assert_eq!(3, model.profit_at.num_calls());</mark>
 }
 </code></pre>
 
 [NEXT]
 ### GIVEN: Setting Mock Behaviour
 
-* Define value to return for mocked method:
-  - for all calls
-  - for specific input arguments
-* Define sequence of values to return
-* Define `fn` or closure that transforms input args
-
 _note_
 Mocks can be configured to return a single value, a sequence of values (one
 value for each call) or invoke a function/closure. Additionally, it is possible
 to make a mock return special value /invoke special functions when specific
 arguments are passed in.
-
-[NEXT]
-Predicting profit of a stock portfolio over time.
-
-```rust
-pub trait ProfitModel {
-    fn profit_at(timestamp: u64) -> f64;
-}
-
-pub fn predict_profit_over_time(&model: &ProfitModel,
-                                 start: u64,
-                                 end: u64) -> Vec<f64>
-{
-  (start..end)
-      .map(|t| model.profit_at(t))
-      .collect()
-}
-```
-
-[NEXT]
-![predicter_collaborators](images/predicter_collaborators.png)
-
-* Mock `ProfitModel`
-* Test `predict_profit_over_time()`
-
-[NEXT]
-```rust
-mock_trait!(
-    MockModel,
-    profit_at(u64) -> f64);
-
-impl ProfitModel for MockModel {
-    mock_method!(profit_at(&self, timestamp: u64) -> f64);
-}
-```
 
 [NEXT]
 ### Default Return Value
@@ -674,7 +615,6 @@ fn using_closure_to_compute_return_value() {
 }
 </code></pre>
 
-
 [NEXT]
 ### Precedence Order
 
@@ -724,7 +664,7 @@ fn asserting_mock_was_called() {
 [NEXT]
 #### Tighter Call Assertions
 
-<pre class="medium"><code data-noescape class="rust">#[test]
+<pre><code data-noescape class="rust">#[test]
 fn asserting_mock_was_called_with_precise_constraints() {
   // GIVEN:
   let mock = MockModel::default();
@@ -733,17 +673,33 @@ fn asserting_mock_was_called_with_precise_constraints() {
   let profit_over_time = predict_profit_over_time(&mock, 0, 3);
 
   // THEN:
-  // called at least once with argument 0 and 1, in that order
+  // Called exactly three times, once with 0, once with 1 and once
+  // once with 2.
+<mark>  assert!(mock.profit_at.has_calls_exactly((1), (0), (2));</mark>
+}
+</code></pre>
+
+[NEXT]
+#### Calls Made in Order
+
+<pre><code data-noescape class="rust">#[test]
+fn asserting_mock_was_called_with_precise_constraints() {
+  // GIVEN:
+  let mock = MockModel::default();
+
+  // WHEN:
+  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
+
+  // THEN:
+  // Called at least once with argument 0 and 1, in that order.
 <mark>  assert!(mock.profit_at.has_calls_in_order((0), (1));</mark>
-  // called exactly three times, once with 0, once with 1 and once with 2
-<mark>  assert!(mock.profit_at.has_calls_exactly(</mark>
-<mark>      (1), (0), (2));</mark>
-  // called exactly three times, once with 0, once with 1 and once with 2,
-  // and the calls were made in the specified order
+  // Called exactly three times, once with 0, once with 1 and
+  // once with 2, and the calls were made in the specified order.
 <mark>  assert!(mock.profit_at.has_calls_exactly_in_order(</mark>
 <mark>      (0), (1), (2));</mark>
 }
 </code></pre>
+
 
 [NEXT]
 ### Mocking Free Functions

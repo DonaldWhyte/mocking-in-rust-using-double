@@ -99,6 +99,13 @@ code {
     font-size: 32px !important;
 }
 
+.medium-slide p,
+.medium-slide ul,
+.medium-slide li
+{
+    font-size: 50px !important;
+}
+
 .large-slide p,
 .large-slide ul,
 .large-slide li
@@ -130,12 +137,9 @@ img[alt="small_portrait"] {
     border: 2px solid black !important;
 }
 
-img[alt="coin_flip"] {
-    width: 375px;
-}
-
-img[alt="coin_flip_collaborators"] {
+img[alt="prediction"] {
     width: 450px;
+    margin: 0px !important;
 }
 
 img[alt="predicter_collaborators"] {
