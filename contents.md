@@ -222,7 +222,6 @@ Anything non-deterministic that can't be reliably controlled within a unit test.
 **External code dependencies** &mdash; libraries
 
 [NEXT]
-### You Might Also Want to Eliminate
 
 **Heavyweight internal code dependencies.**
 
@@ -257,9 +256,11 @@ they:
 Term originates from a notion of a _"stunt double"_ in films.
 
 [NEXT]
-A **test double** is an object or function substituted for a "real" (production ready) code during testing.
+A **test double** is an object or function substituted for production code during testing.
 
-Should appear exactly the same as a **"real"** production instance to its clients (collaborators).
+Should behave in the same way as the production code.
+
+Easier to control for testing purposes.
 
 _note_
 This is how we eliminate these unwanted dependencies from our tests.
