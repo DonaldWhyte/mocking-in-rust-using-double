@@ -85,28 +85,6 @@ mod tests {
 ```
 
 [NEXT]
-`cargo test`
-
-```cpp
-> cargo test
-
-   Compiling some_lib v0.1.0 (file:///Users/donaldwhyte/some_lib)
-    Finished dev [unoptimized + debuginfo] target(s) in 2.99 secs
-     Running target/debug/deps/some_lib-4ea7f66796617175
-
-running 1 test
-test tests::it_works ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured
-
-   Doc-tests some_lib
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured
-```
-
-[NEXT]
 Write unit tests for a module by defining a private `tests` module in its source file.
 
 <pre><code data-noescape class="rust">// production code
@@ -125,9 +103,7 @@ Annotate tests module with `#[cfg(test)]` so it's only built with `cargo test`.
 
 This module will also _run_ when `cargo test` is invoked.
 
-```
-This is the automatically generated test module. The attribute cfg stands for configuration, and tells Rust that the following item should only be included given a certain configuration option. In this case, the configuration option is test, provided by Rust for compiling and running tests. By using this attribute, Cargo only compiles our test code if we actively run the tests with cargo test. This includes any helper functions that might be within this module, in addition to the functions annotated with #[test].
-```
+"This is the automatically generated test module. The attribute cfg stands for configuration, and tells Rust that the following item should only be included given a certain configuration option. In this case, the configuration option is test, provided by Rust for compiling and running tests. By using this attribute, Cargo only compiles our test code if we actively run the tests with cargo test. This includes any helper functions that might be within this module, in addition to the functions annotated with #[test]."
 
 Source: https://doc.rust-lang.org/book/second-edition/ch11-03-test-organization.html
 
@@ -159,7 +135,9 @@ _note_
 Emphasise the fact that each function is a separate, isolated test.
 
 [NEXT]
-```
+`cargo test`
+
+```bash
 dwhyte-mbp2:some_lib donaldwhyte$ cargo test
     Finished dev [unoptimized + debuginfo] target(s) in 0.0 secs
      Running target/debug/deps/some_lib-4ea7f66796617175
@@ -184,6 +162,7 @@ Rust has native support for:
 * documentation tests
 * integration tests
 
+_note_
 Focus of talk is mocking, so these are not covered here.
 
 
@@ -280,9 +259,9 @@ they:
 
 ![stunt_double](images/brad_double_small.jpg)
 
-[NEXT]
 Term originates from a notion of a _"stunt double"_ in films.
 
+[NEXT]
 A **test double** is an object or function substituted for a "real" (production ready) code during testing.
 
 Should appear exactly the same as a **"real"** production instance to its clients (collaborators).
@@ -350,7 +329,8 @@ _note_
 WHY? Mocks are the most flexible. They're a superset of stubs and spies.
 
 [NEXT SECTION]
-## 3. Mocking in Rust Using `double`
+## 3. Mocking in Rust
+#### Using `double`
 
 ![double](images/double.svg)
 
@@ -807,9 +787,6 @@ fn asserting_mock_was_called_with_precise_constraints() {
 [NEXT]
 ### Mocking Free Functions
 
-[NEXT]
-`double` can also be used to mock free functions.
-
 Useful for testing code that takes function objects for runtime polymorphism.
 
 [NEXT]
@@ -823,44 +800,56 @@ Useful for testing code that takes function objects for runtime polymorphism.
 }
 </pre></code>
 
-[NEXT]
-<!-- .slide: class="small-slide" -->
-Construct a `double::Mock` object directly.
+_note_
+`double` can also be used to mock free functions.
 
-Format of generic params is: `<(arg_types...), retval_type>`.
+[NEXT]
+**`mock_func!`**
+
+```
+mock_func!(
+    mock,     // variable that stores mock object
+    mock_fn,  // variable that stores closure
+    i32,      // return value types
+    i32       // argument 1 type
+```
+
+expands to:
 
 ```rust
-extern crate double;
-use double::mock;
-
 let mock = Mock::<(i32), i32>::default();
+let mock_fn = |arg1: i32| -> i32 { mock.call(arg1) };
 ```
 
 [NEXT]
 **`mock_func!`**
 
-Wrap mock object in a closure.
-
 ```rust
-mock_func!(&mock, retval_type, arg_types...);
+mock_func!(
+    mock_obj_var,
+    mock_func_var,
+    retval_type,
+    arg1_type,
+    ...,
+    argN_type);
 ```
 
 [NEXT]
 <pre class="medium"><code data-noescape class="rust">#[test]
 fn test_function_used_correctly() {
     // GIVEN:
-<mark>    let mock = Mock::<(i32), i32>::default();</mark>
+<mark>    mock_func!(mock, mock_fn, i32, i32);</mark>
 <mark>    mock.use_closure(Box::new(|x| x * 2));</mark>
 
     // WHEN:
     let sequence = generate_sequence(
-<mark>        &mock_func!(mock, i32, i32),</mark>
+<mark>        &mock_fn,</mark>
         1,
         5);
 
     // THEN:
     assert_eq!(vec!(2, 4, 6, 8), sequence);
-    assert!(mock.has_calls_exactly(vec!(
+    assert!(mock.has_calls_exactly_in_order(vec!(
       1, 2, 3, 4
     )));
 }
