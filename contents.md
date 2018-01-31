@@ -28,13 +28,24 @@
 <div class="clear-col"></div>
 
 [NEXT]
-## Outline
+### Motivation
+Rust focuses on memory safety.
 
-1. Unit Tests
-2. What is Mocking?
-3. Mocking in Rust
-4. Pattern Matching
-5. Library Constraints
+While supporting advanced concurrency.
+
+Does a great job at this.
+
+[NEXT]
+But even if our code is safe...
+
+...we still need to make sure it's doing the **right** thing.
+
+[NEXT]
+### Outline
+
+* Rust unit tests
+* Mocking in Rust using `double`
+* Design considerations
 
 
 [NEXT SECTION]
@@ -133,7 +144,7 @@ Emphasise the fact that each function is a separate, isolated test.
 `cargo test`
 
 ```bash
-dwhyte-mbp2:some_lib donaldwhyte$ cargo test
+user:some_lib donaldwhyte$ cargo test
     Finished dev [unoptimized + debuginfo] target(s) in 0.0 secs
      Running target/debug/deps/some_lib-4ea7f66796617175
 
@@ -143,12 +154,6 @@ test tests::ensure_two_is_added_to_positive ... ok
 test tests::ensure_two_is_added_to_zero ... ok
 
 test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured
-
-   Doc-tests some_lib
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured
 ```
 
 [NEXT]
@@ -222,12 +227,17 @@ Anything non-deterministic that can't be reliably controlled within a unit test.
 **External code dependencies** &mdash; libraries
 
 [NEXT]
+<!-- .slide: class="medium-slide" -->
+## Could Also Eliminate
+<br/>
+Large internal dependencies.
 
-**Heavyweight internal code dependencies.**
-
-* simpler test code
-* makes individual tests less brittle
-* downsides to eliminating these dependencies
+[NEXT]
+* tests become smaller
+* only test one thing
+    * failures easier to understand
+    * easy to understand
+    * easy to change
 
 _note_
 Downsides to testing internal code dependencies:
@@ -269,67 +279,82 @@ Similar to using a stunt double in films, where viewers don't notice that
 stunts are performed by a different actor.
 
 [NEXT]
+### Two Approaches
+
+[NEXT]
+<div class="left-col">
+  <br />
+  <h4>State Verification</h4>
+  <p>
+    Test code by asserting its and its collaboator's <strong>post-test state</strong>.
+  </p>
+</div>
+<div class="right-col">
+  <br />
+  <h4>Behaviour Verification</h4>
+  <p>
+    Test code by asserting its <strong>interaction</strong> with its collaborators.
+  </p>
+  <br />
+</div>
+<div class="clear-col"></div>
+
+[NEXT]
+<div class="left-col">
+  <br />
+  <h4>State Verification</h4>
+  <p>
+    Test code by asserting its and its collaboator's <strong>post-test state</strong>.
+  </p>
+</div>
+<div class="right-col highlighted">
+  <br />
+  <h4><u>Behaviour Verification</u></h4>
+  <p>
+    Test code by asserting its interaction with its collaborators.
+  </p>
+  <br />
+</div>
+<div class="clear-col"></div>
+
+[NEXT]
 ## Types
 
-* **Stubs** return hard-coded values
-* **Spies** record the code's interaction with collaborators
-    - times method called and passed arguments
-* **Mocks** return hard-coded values and verify interaction
-    - both a stub and a spy
+<ul>
+  <li>**Stubs** return hard-coded values</li>
+  <li>**Mocks** pre-define a spec of expected calls / behaviour</li>
+  <li>**Spies** record the code's interaction with collaborators</li>
+</ul>
+<br />
+<br />
+
+Spies are the focus of this talk.
+<!-- .element: style="color: #FFF" -->
 
 _note_
 Stubs provide canned answers to calls made during the test, usually not responding at all to anything outside what's programmed in for the test.
 
 Spies are stubs that also record some information based on how they were called. One form of this might be an email service that records how many messages it was sent.
 
-Mocks are what we are talking about here: objects pre-programmed with expectations which form a specification of the calls they are expected to receive.
+Mocks are  pre-programmed with expectations which form a specification of the calls they are expected to receive.
 
-Souce: https://martinfowler.com/articles/mocksArentStubs.html
-
-[NEXT]
-<div class="left-col">
-  <h4>State Verification</h4>
-  <p>
-    Test code by asserting its and its collaboator's <strong>post-test state</strong>.
-  </p>
-  <hr />
-  <ul>
-    <li>Stubs</li>
-    <li>Spies</li>
-  </ul>
-</div>
-<div class="right-col">
-  <h4>Behaviour Verification</h4>
-  <p>
-    Test code by asserting its <strong>interaction</strong> with its collaborators.
-  </p>
-  <hr />
-  <ul>
-    <li>Spies</li>
-    <li>Mocks</li>
-  </ul>
-</div>
-<div class="clear-col"></div>
-
-_note_
-Of these kinds of doubles, only mocks insist upon behavior verification.
-
-Spies almost support this verification.
-
-Souce: https://martinfowler.com/articles/mocksArentStubs.html
+Source: https://martinfowler.com/articles/mocksArentStubs.html
 
 [NEXT]
-Both techniques are useful.
+## Types
 
-Use the right tool for the job.
+<ul>
+  <li>**Stubs** return hard-coded values</li>
+  <li>**Mocks** pre-define a spec of expected calls / behaviour</li>
+  <li><div class="highlighted-inline">**Spies** record the code's interaction with collaborators</div></li>
+</ul>
+<br />
+<br />
 
-[NEXT]
-### Focus of Talk
-
-Behaviour verification with **spies**.
+Spies are the focus of this talk.
 
 [NEXT SECTION]
-## 3. Mocking in Rust
+## 3. Test Doubles in Rust
 #### Using `double`
 
 ![double](images/double.svg)
@@ -424,10 +449,10 @@ Not rely on an external environment.
 ```rust
 mock_trait!(
     NameOfMockStruct,
-    method1_name(arg1_type, ..., argM_type) -> return_type,
-    method2_name(arg1_type, ..., argM_type) -> return_type
+    method1_name(arg1_type, ...) -> return_type,
+    method2_name(arg1_type, ...) -> return_type
     ...
-    methodN_name(arg1_type, ..., argM_type) -> return_type);
+    methodN_name(arg1_type, ...) -> return_type);
 ```
 
 [NEXT]
@@ -435,11 +460,7 @@ mock_trait!(
 
 Generate implementations of all methods in mock `struct`.
 
-<pre><code data-noescape class="rust">pub trait ProfitModel {
-    fn profit_at(&self, timestamp: u64) -> f64;
-}
-
-mock_trait!(
+<pre><code data-noescape class="rust">mock_trait!(
     MockModel,
     profit_at(u64) -> f64);
 
@@ -453,16 +474,12 @@ mock_trait!(
 
 ```rust
 impl TraitToMock for NameOfMockStruct {
-  mock_method!(
-    method1_name(&self, arg1_type, ..., argM_type) -> return_type);
-      .
-      .
-      .
-  mock_method!(
-    methodN_name(&self, arg1_type, ..., argN_type) -> return_type);
+  mock_method!(method1_name(&self, arg1_type, ...) -> return_type);
+  mock_method!(method2_name(&self, arg1_type, ...) -> return_type);
+  ...
+  mock_method!(methodN_name(&self, arg1_type, ...) -> return_type);
 }
 ```
-<!-- .element class="medium-large" -->
 
 [NEXT]
 Full code to generate a mock implementation of a `trait`:
@@ -483,25 +500,6 @@ Emphasise this is the only boilerplate needed.
 [NEXT]
 ## Using Generated Mocks in Tests
 
-Construct mock object:
-
-```rust
-let model = MockModel::default();
-```
-
-Configure behaviour:
-
-```rust
-model.profit_at.return_value(10);
-```
-
-Assert mock was called:
-
-```rust
-assert_eq!(3, model.profit_at.num_calls());
-```
-
-[NEXT]
 <pre><code data-noescape class="rust">#[test]
 fn test_profit_model_is_used_for_each_timestamp() {
   // GIVEN:
@@ -613,23 +611,6 @@ fn using_closure_to_compute_return_value() {
 </code></pre>
 
 [NEXT]
-### Precedence Order
-
-|   |   |
-| - | - |
-|   | **Behaviour for specific inputs** |
-| 0 | `use_closure_for((args), closure)` |
-| 1 | `use_fn_for((args), func)` |
-| 2 | `return_value_for((args), value)` |
-|   | **Behaviour for any inputs** |
-| 3 | `use_fn(func)` |
-| 4 | `use_closure(closure)` |
-| 5 | `return_value(value)` |
-|   | **When no behaviour is set** |
-| 6 | `ReturnType::default()` |
-<!-- .element class="medium-table-text" -->
-
-[NEXT]
 ### THEN: Code Used Mock as Expected
 
 Verify mocks are called:
@@ -673,23 +654,6 @@ fn asserting_mock_was_called_with_precise_constraints() {
   // Called exactly three times, once with 0, once with 1 and once
   // once with 2.
 <mark>  assert!(mock.profit_at.has_calls_exactly((1), (0), (2)));</mark>
-}
-</code></pre>
-
-[NEXT]
-#### Calls Made in Order
-
-<pre><code data-noescape class="rust">#[test]
-fn asserting_mock_was_called_with_precise_constraints() {
-  // GIVEN:
-  let mock = MockModel::default();
-
-  // WHEN:
-  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
-
-  // THEN:
-  // Called at least once with argument 0 and 1, in that order.
-<mark>  assert!(mock.profit_at.has_calls_in_order((0), (1)));</mark>
   // Called exactly three times, once with 0, once with 1 and
   // once with 2, and the calls were made in the specified order.
 <mark>  assert!(mock.profit_at.has_calls_exactly_in_order(</mark>
@@ -697,13 +661,14 @@ fn asserting_mock_was_called_with_precise_constraints() {
 }
 </code></pre>
 
-
 [NEXT]
 ### Mocking Free Functions
 
 Useful for testing code that takes function objects for runtime polymorphism.
 
 [NEXT]
+Map a sequence of integers using a given function:
+
 <pre class="medium"><code data-noescape class="rust">fn generate_sequence(
     <mark>func: &Fn(i32) -> i32,</mark>
     min: i32,
@@ -720,33 +685,19 @@ _note_
 [NEXT]
 **`mock_func!`**
 
-```
-mock_func!(
-    mock,     // variable that stores mock object
-    mock_fn,  // variable that stores closure
-    i32,      // return value types
-    i32       // argument 1 type
-```
-
-expands to:
-
-```rust
-let mock = Mock::<(i32), i32>::default();
-let mock_fn = |arg1: i32| -> i32 { mock.call(arg1) };
-```
-
-[NEXT]
 <pre class="medium"><code data-noescape class="rust">#[test]
 fn test_function_used_correctly() {
     // GIVEN:
-<mark>    mock_func!(mock, mock_fn, i32, i32);</mark>
-<mark>    mock.use_closure(Box::new(|x| x * 2));</mark>
+<mark>    mock_func!(</mark>
+<mark>        mock,     // variable that stores mock object</mark>
+<mark>        mock_fn,  // variable that stores closure</mark>
+<mark>        i32,      // return value types</mark>
+<mark>        i32       // argument 1 type</mark>
+
+    mock.use_closure(Box::new(|x| x * 2));
 
     // WHEN:
-    let sequence = generate_sequence(
-<mark>        &mock_fn,</mark>
-        1,
-        5);
+<mark>    let sequence = generate_sequence(&mock_fn, 1, 5);</mark>
 
     // THEN:
     assert_eq!(vec!(2, 4, 6, 8), sequence);
@@ -789,12 +740,12 @@ pub struct WorldState {
 [NEXT]
 ![robot](images/robot.svg)
 
-<pre class="medium"><code data-noescape class="rust">pub struct Robot {
-    actuator: &mut Actuator
+<pre class="medium"><code data-noescape class="rust">pub struct Robot&lt;A&gt; {
+    actuator: &mut A
 }
 
-impl Robot {
-    pub fn new(actuator: &mut Actuator) -> Robot {
+impl&ltA: Actuator&gt; Robot {
+    pub fn new(actuator: &mut A) -> Robot {
         Robot { actuator: actuator }
     }
 
@@ -1000,6 +951,17 @@ fn test_the_robot() {
 <!-- .element class="medium-table-text" -->
 
 [NEXT]
+##### String Matchers
+|                       |                                                   |
+| --------------------- | ------------------------------------------------- |
+| `has_substr(string)`  | argument contains `string` as a sub-string.       |
+| `starts_with(prefix)` | argument starts with string `prefix`.             |
+| `ends_with(suffix)`   | argument ends with string `suffix`.               |
+| `eq_nocase(string)`   | argument is equal to `string`, ignoring case.     |
+| `ne_nocase(value)`    | argument is not equal to `string`, ignoring case. |
+<!-- .element class="medium-table-text" -->
+
+[NEXT]
 ##### Container Matchers
 |                                    |                                                                                                               |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -1010,17 +972,6 @@ fn test_the_robot() {
 | `unordered_elements_are(elements)` | argument implements `IntoIterator` that contains the same elements as the vector `elements` (ignoring order). |
 | `when_sorted(elements)`            | argument implements `IntoIterator` that, when its elements are sorted, matches the vector `elements`.         |
 <!-- .element class="small-table-text" -->
-
-[NEXT]
-##### String Matchers
-|                       |                                                   |
-| --------------------- | ------------------------------------------------- |
-| `has_substr(string)`  | argument contains `string` as a sub-string.       |
-| `starts_with(prefix)` | argument starts with string `prefix`.             |
-| `ends_with(suffix)`   | argument ends with string `suffix`.               |
-| `eq_nocase(string)`   | argument is equal to `string`, ignoring case.     |
-| `ne_nocase(value)`    | argument is not equal to `string`, ignoring case. |
-<!-- .element class="medium-table-text" -->
 
 
 [NEXT]
@@ -1070,25 +1021,23 @@ fn test_the_robot() {
 [NEXT]
 ### Custom Matchers
 
-No built-in matchers fit a use case?
+Define new matchers if the built-in ones aren't enough.
 
-Define your own.
-
-[**Examples in the README.**](https://github.com/DonaldWhyte/double/)
+```
+fn custom_matcher<T>(arg: &T, params...) -> bool {
+    // matching code here
+}
+```
 
 
 [NEXT SECTION]
-## 5. Library Constraints
+## 5. Design Considerations
 ![limitations](images/limitations.svg)
 
 [NEXT]
-### Core Design Philosophy of `double`
+<!-- .slide: class="large-slide" -->
 
-1. Rust stable first
-2. No changes to production code required
-
-_note_
-The vision for `double` is that must work with stable Rust. It must don't impose code changes to the user's production code either. This makes supporting some features difficult.
+**Two** double design goals.
 
 [NEXT]
 #### 1. Rust Stable First
@@ -1096,6 +1045,7 @@ The vision for `double` is that must work with stable Rust. It must don't impose
 Most mocking libraries require nightly.
 
 _note_
+The vision for `double` is that must work with stable Rust. 
 The vast majority of other mocking libraries that use nightly compiler plugins. This gives them more flexibility at the cost of restricting the user to nightly Rust.
 
 [NEXT]
@@ -1106,6 +1056,8 @@ Most (all?) mocking libraries require changes to prod code.
 Makes mocking `traits` from the standard library or external crates **impossible**.
 
 _note_
+It must don't impose code changes to the user's production code either. This makes supporting some features difficult.
+
 The following other mocking libraries have similar feature sets to `double`, require nightly:
   * mockers (has partial support for stable)
   * mock_derive
@@ -1115,36 +1067,20 @@ The following other mocking libraries have similar feature sets to `double`, req
 And none of them support mocking traits from the standard library or external crates.
 
 [NEXT]
-**Rust stable and no code changes comes at a cost.**
+<!-- .slide: class="large-slide" -->
+There is a cost.
 
 [NEXT]
 ### Limitations
 
-1. Argument types must implement `Clone` and `Eq`
-2. Return value types must implement `Clone`
-3. Limited support for generic traits
+1. Longer mock definitions
+2. Limited support for generic traits
 
 _note_
-(1) and (2) are constraints caused by the current implementation of `double`.
-
-I believe no existing mocking library, using nightly or otherwise, have properly solved (3) and (4).
-
-Support for generic traits (4) in particular is a difficult problem to solve. It's possible with `double`, but it requires additional boilerplate code.
-
-Note that there is ongoing work on allowing these traits to be used without neeeding production code changes.
-
-Speak to me after this talk if you're interested in learning more about this.
+(2) in particular is a difficult problem to solve. It's possible with `double`, but it requires additional boilerplate code.
 
 [NEXT]
 Ongoing work on `double` to remove these limitations.
-
-_note_
-There are a lot of nightly features that would make removing these constraints much easier.
-
-However, I believe none of these constraints are impossible to solve using the current Rust stable compiler.
-
-As such, there are ongoing work on the library to remove these limitations.
-
 
 [NEXT SECTION]
 ## Fin
@@ -1156,9 +1092,7 @@ Mocking is used to isolate unit tests from exernal resources or complex dependen
 Achieved in Rust by replacing `trait`s and functions.
 
 [NEXT]
-Used incorrectly, behaviour verification overfits the implementation.
-
-Introducing a huge burden on development.
+Behaviour verification can overfit implementation.
 
 Pattern matching **expands the asserted behaviour space**.
 
@@ -1174,7 +1108,7 @@ First-class pattern matching support.
 [NEXT]
 `double` supports stable and requires no code changes.
 
-Requires users to write slightly more boilerplate code.
+These features come at a cost.
 
 Ongoing work on the library to remove these limitations.
 
@@ -1198,7 +1132,7 @@ For completeness, here's a list of other Rust mocking crates. In additional to c
 * double repository:
   - https://github.com/DonaldWhyte/double
 * double documentation:
-  - https://docs.rs/double/0.2.0/double/
+  - https://docs.rs/double/0.2.2/double/
 * example code from this talk:
   - https://github.com/DonaldWhyte/mocking-in-rust-using-double/tree/master/code
 

@@ -113,6 +113,15 @@ code {
     font-size: 60px !important;
 }
 
+.highlighted-inline {
+    background-color: #AAA;
+}
+
+.highlighted {
+    font-weight: bold !important;
+    background-color: #AAA;
+}
+
 /* For highlighting specific lines in code formatted using hljs */
 code mark {
     display: inline-block;
