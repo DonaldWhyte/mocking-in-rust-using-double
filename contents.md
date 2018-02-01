@@ -396,7 +396,7 @@ pub fn predict_profit_over_time<M: ProfitModel>(
     start: u64,
     end: u64) -> Vec<f64>
 {
-    (start..end)
+    (start..end + 1)
         .map(|t| model.profit_at(t))
         .collect()
 }
@@ -506,7 +506,7 @@ fn test_profit_model_is_used_for_each_timestamp() {
 <mark>  mock.profit_at.return_value(10);</mark>
 
   // WHEN:
-  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
+  let profit_over_time = predict_profit_over_time(&mock, 0, 2);
 
   // THEN:
   assert_eq!(vec!(10, 10, 10), profit_over_time);
@@ -532,7 +532,7 @@ fn no_return_value_specified() {
   let mock = MockModel::default();
 
   // WHEN:
-  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
+  let profit_over_time = predict_profit_over_time(&mock, 0, 2);
 
   // THEN:
   // default value of return type is used if no value is specified
@@ -550,7 +550,7 @@ fn single_return_value() {
 <mark>  mock.profit_at.return_value(10);</mark>
 
   // WHEN:
-  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
+  let profit_over_time = predict_profit_over_time(&mock, 0, 2);
 
   // THEN:
 <mark>  assert_eq!(vec!(10, 10, 10), profit_over_time);</mark>
@@ -567,7 +567,7 @@ fn multiple_return_values() {
 <mark>  mock.profit_at.return_values(1, 5, 10);</mark>
 
   // WHEN:
-  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
+  let profit_over_time = predict_profit_over_time(&mock, 0, 2);
 
   // THEN:
 <mark>  assert_eq!(vec!(1, 5, 10), profit_over_time);</mark>
@@ -581,14 +581,13 @@ fn multiple_return_values() {
 fn return_value_for_specific_arguments() {
   // GIVEN:
   let mock = MockModel::default();
-<mark>  mock.profit_at.return_value(10);</mark>
 <mark>  mock.profit_at.return_value_for((1), 5);</mark>
 
   // WHEN:
-  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
+  let profit_over_time = predict_profit_over_time(&mock, 0, 2);
 
   // THEN:
-<mark>  assert_eq!(vec!(10, 5, 10), profit_over_time);</mark>
+<mark>  assert_eq!(vec!(0, 5, 0), profit_over_time);</mark>
 }
 </code></pre>
 
@@ -602,7 +601,7 @@ fn using_closure_to_compute_return_value() {
 <mark>  mock.profit_at.use_closure(|t| t * 5 + 1);</mark>
 
   // WHEN:
-  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
+  let profit_over_time = predict_profit_over_time(&mock, 0, 2);
 
   // THEN:
 <mark>  assert_eq!(vec!(1, 6, 11), profit_over_time);</mark>
@@ -626,7 +625,7 @@ fn asserting_mock_was_called() {
   let mock = MockModel::default();
 
   // WHEN:
-  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
+  let profit_over_time = predict_profit_over_time(&mock, 0, 2);
 
   // THEN:
   // called at least once
@@ -647,7 +646,7 @@ fn asserting_mock_was_called_with_precise_constraints() {
   let mock = MockModel::default();
 
   // WHEN:
-  let profit_over_time = predict_profit_over_time(&mock, 0, 3);
+  let profit_over_time = predict_profit_over_time(&mock, 0, 2);
 
   // THEN:
   // Called exactly three times, once with 0, once with 1 and once
@@ -756,7 +755,7 @@ impl&ltA: Actuator&gt; Robot {
 ```rust
 pub trait Actuator {
     fn move_forward(&mut self, amount: i32);
-    fn speak(&mut self, message: &str, volume: u32);
+    // ...
 }
 ```
 
@@ -876,15 +875,16 @@ fn test_the_robot() {
 Parametrised matcher functions:
 
 ```rust
-/// Matcher that matches if `arg` is greater than or equal to
-/// `target_val`.
+/// Matcher that matches if `arg` is greater than or
+/// equal to `base_val`.
 pub fn ge<T: PartialEq + PartialOrd>(
     arg: &T,
-    target_val: T) -> bool
+    base_val: T) -> bool
 {
-    *arg >= target_val
+    *arg >= base_val
 }
 ```
+<!-- .element: class="large" -->
 
 [NEXT]
 Use `p!` to generate matcher closures on-the-fly.
@@ -894,6 +894,7 @@ use double::matcher::ge;
 
 let is_greater_than_or_equal_to_100 = p!(ge, 100);
 ```
+<!-- .element: class="large" -->
 
 [NEXT]
 <pre><code data-noescape class="rust"><mark>use double::matcher::*;</mark>
@@ -927,9 +928,9 @@ fn test_the_robot() {
 | `le(value)`        | `argument <= value`                                             |
 | `gt(value)`        | `argument > value`                                              |
 | `ge(value)`        | `argument >= value`                                             |
-| `is_some(matcher)` | argument is an `Option::Some`, whose contents matches `matcher` |
-| `is_ok(matcher)`   | argument is an `Result::Ok`, whose contents matches `matcher`   |
-| `is_err(matcher)`  | argument is an `Result::er`, whose contents matches `matcher`   |
+| `is_some(matcher)` | arg is `Option::Some`, whose contents matches `matcher` |
+| `is_ok(matcher)`   | arg is `Result::Ok`, whose contents matches `matcher`   |
+| `is_err(matcher)`  | arg is `Result::er`, whose contents matches `matcher`   |
 <!-- .element class="medium-table-text" -->
 
 [NEXT]
@@ -980,46 +981,36 @@ assert!(robot.move_forward.called_with_pattern(
     ))
 ));
 ```
+<!-- .element class="large" -->
 
 [NEXT]
-### Methods with Multiple Arguments
+### Composite Matchers
 
-<pre><code data-noescape class="rust">pub trait Actuator {
-    fn move_forward(&mut self, amount: i32);
-<mark>    fn speak(&mut self, message: &str, volume: u32);</mark>
-}
-</code></pre>
+Assert all elements of a collection match a pattern:
 
-[NEXT]
-**`matcher!`**
+```rust
+mock_func!(mock, func, (), Vec<i32>);
 
-Create tuple of arg matchers for multi-arg methods.
+func(vec!(57, -2, 4, 25260, 42));
 
-<pre><code data-noescape class="rust">use double::matcher::*;
-
-#[test]
-fn test_the_robot() {
-    let robot = MockRobot::default();
-    test_complex_business_logic_that_makes_decisions(&robot);
-<mark>    assert!(robot.speak.called_with_pattern(</mark>
-<mark>        matcher!(</mark>
-<mark>            p!(has_substr, "FOSDEM"),</mark>
-<mark>            p!(ge, 0.7)</mark>
-<mark>        )</mark>
-<mark>    ));</mark>
-}
-</code></pre>
+// All elements should be non-zero.
+assert!(mock.called_with_pattern(
+    p!(each, p!(ne, 0))
+));
+```
+<!-- .element class="large" -->
 
 [NEXT]
 ### Custom Matchers
 
 Define new matchers if the built-in ones aren't enough.
 
-```
+```rust
 fn custom_matcher<T>(arg: &T, params...) -> bool {
     // matching code here
 }
 ```
+<!-- .element class="large" -->
 
 
 [NEXT SECTION]
@@ -1029,7 +1020,7 @@ fn custom_matcher<T>(arg: &T, params...) -> bool {
 [NEXT]
 <!-- .slide: class="large-slide" -->
 
-**Two** double design goals.
+2 design goals in `double`.
 
 [NEXT]
 #### 1. Rust Stable First
@@ -1045,7 +1036,7 @@ The vast majority of other mocking libraries that use nightly compiler plugins. 
 
 Most (all?) mocking libraries require changes to prod code.
 
-Makes mocking `traits` from the standard library or external crates **impossible**.
+Allows `traits` from the standard library or external crates to be mocked.
 
 _note_
 It must don't impose code changes to the user's production code either. This makes supporting some features difficult.
