@@ -54,6 +54,16 @@ code {
     color: #22F;
 }
 
+.large code {
+    font-size: 25px;
+    line-height: 32px;
+}
+
+.largish code {
+    font-size: 24px;
+    line-height: 26px;
+}
+
 .medium code {
     font-size: 18px;
     line-height: 20px;

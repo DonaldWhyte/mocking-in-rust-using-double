@@ -359,7 +359,20 @@ Spies are the focus of this talk.
 
 ![double](images/double.svg)
 
-[NEXT] 
+[NEXT]
+`double` generates mock implementations for:
+
+* `trait`s
+* functions
+
+[NEXT]
+Flexible configuration of a double's **behaviour**.
+
+Simple and complex **assertions** on how mocks were used/called.
+
+[NEXT]
+### Example
+
 ![prediction](images/prediction.jpg)
 
 Predicting profit of a stock portfolio over time.
@@ -372,9 +385,10 @@ pub trait ProfitModel {
     fn profit_at(&self, timestamp: u64) -> f64;
 }
 ```
+<!-- .element: class="large" -->
 
 [NEXT]
-## Code Under Test
+## Implementation
 
 ```rust
 pub fn predict_profit_over_time<M: ProfitModel>(
@@ -387,23 +401,12 @@ pub fn predict_profit_over_time<M: ProfitModel>(
         .collect()
 }
 ```
-
-[NEXT]
-## Using Code
-
-```rust
-fn predict() {
-    let model = SomeProfitModelImplementation::new(...);
-
-    let profit_over_time = predict_profit_over_time(&model);
-
-    println!("Profit over time: {:?}", profit_over_time);
-}
-```
+<!-- .element: class="large" -->
 
 [NEXT]
 We want to test `predict_profit_over_time()`.
 
+[NEXT]
 Tests should be repeatable.
 
 Not rely on an external environment.
@@ -411,30 +414,24 @@ Not rely on an external environment.
 [NEXT]
 ![predicter_collaborators](images/predicter_collaborators.png)
 
-* One collaborator &mdash; `ProfitModel`
-* Predicting profit is hard...
-* ...real `ProfitModel` implementations use:
-  - external data sources (DBs, APIs, files, etc.)
-  - internal code dependencies with complex setup
+One collaborator &mdash; `ProfitModel`.
+
+[NEXT]
+### Predicting profit is hard
+
+Real `ProfitModel` implementations use:
+
+  - external data sources (DBs, APIs, files)
+  - complex internal code dependencies (math models)
 
 [NEXT]
 <!-- .slide: class="medium-slide" -->
 **Let's mock `ProfitModel`.**
 
 [NEXT]
-## `double` to the Rescue!
-
-* **generate** mock trait implementations using macros
-* flexible configuration of mock's **behaviour**
-* can make simple and complex **assertions** on mock calls
-
-[NEXT]
-## Defining Mock Collaborators
-
-[NEXT]
 **`mock_trait!`**
 
-<pre><code data-noescape class="rust">pub trait ProfitModel {
+<pre class="large"><code data-noescape class="rust">pub trait ProfitModel {
     fn profit_at(&self, timestamp: u64) -> f64;
 }
 
@@ -454,13 +451,14 @@ mock_trait!(
     ...
     methodN_name(arg1_type, ...) -> return_type);
 ```
+<!-- .element: class="large" -->
 
 [NEXT]
 **`mock_method!`**
 
 Generate implementations of all methods in mock `struct`.
 
-<pre><code data-noescape class="rust">mock_trait!(
+<pre class="largish"><code data-noescape class="rust">mock_trait!(
     MockModel,
     profit_at(u64) -> f64);
 
@@ -493,6 +491,7 @@ impl ProfitModel for MockModel {
     mock_method!(profit_at(&self, timestamp: u64) -> f64);
 }
 ```
+<!-- .element: class="largish" -->
 
 _note_
 Emphasise this is the only boilerplate needed.
@@ -667,20 +666,12 @@ fn asserting_mock_was_called_with_precise_constraints() {
 Useful for testing code that takes function objects for runtime polymorphism.
 
 [NEXT]
-Map a sequence of integers using a given function:
+Map a `vec` of elements to a function:
 
-<pre class="medium"><code data-noescape class="rust">fn generate_sequence(
-    <mark>func: &Fn(i32) -> i32,</mark>
-    min: i32,
-    max: i32) -> Vec&lt;i32&gt;
-{
-    // exclusive range
-    (min..max).map(func).collect()
-}
-</pre></code>
-
-_note_
-`double` can also be used to mock free functions.
+```rust
+let result = sequence.iter().map(func).collect();
+```
+<!-- .element: class="large" -->
 
 [NEXT]
 **`mock_func!`**
@@ -692,17 +683,18 @@ fn test_function_used_correctly() {
 <mark>        mock,     // variable that stores mock object</mark>
 <mark>        mock_fn,  // variable that stores closure</mark>
 <mark>        i32,      // return value types</mark>
-<mark>        i32       // argument 1 type</mark>
+<mark>        i32);     // argument 1 type</mark>
 
     mock.use_closure(Box::new(|x| x * 2));
 
     // WHEN:
-<mark>    let sequence = generate_sequence(&mock_fn, 1, 5);</mark>
+    let sequence = vec!(1, 2, 3, 4);
+<mark>    let output = sequence.iter().map(mock_fn);</mark>
 
     // THEN:
     assert_eq!(vec!(2, 4, 6, 8), sequence);
     assert!(mock.has_calls_exactly_in_order(vec!(
-      1, 2, 3, 4
+        1, 2, 3, 4
     )));
 }
 </code></pre>
@@ -801,9 +793,9 @@ fn test_the_robot() {
     // WHEN:
     {
         let robot = Robot::new(&actuator);
-        robot.take_action(input_state);    
+        robot.take_action(input_state);
     }
-    
+
     // THEN:
 <mark>    assert!(actuator.move_forward.called_with(100));</mark>
 }
@@ -1045,7 +1037,7 @@ fn custom_matcher<T>(arg: &T, params...) -> bool {
 Most mocking libraries require nightly.
 
 _note_
-The vision for `double` is that must work with stable Rust. 
+The vision for `double` is that must work with stable Rust.
 The vast majority of other mocking libraries that use nightly compiler plugins. This gives them more flexibility at the cost of restricting the user to nightly Rust.
 
 [NEXT]
