@@ -318,40 +318,28 @@ stunts are performed by a different actor.
 <div class="clear-col"></div>
 
 [NEXT]
-## Types
+Many types of test double:
 
-<ul>
-  <li>**Stubs** return hard-coded values</li>
-  <li>**Mocks** pre-define a spec of expected calls/behaviour</li>
-  <li>**Spies** record the code's interaction with collaborators</li>
-</ul>
-<br />
-<br />
+* Stub
+* Spy
+* Mock
+* Fake
 
-Spies are the focus of this talk.
-<!-- .element: style="color: #FFF" -->
+They're often all just referred to "mocks".
 
 _note_
 Stubs provide canned answers to calls made during the test, usually not responding at all to anything outside what's programmed in for the test.
 
 Spies are stubs that also record some information based on how they were called. One form of this might be an email service that records how many messages it was sent.
 
-Mocks are  pre-programmed with expectations which form a specification of the calls they are expected to receive.
+Mocks are pre-programmed with expectations which form a specification of the calls they are expected to receive.
 
 Source: https://martinfowler.com/articles/mocksArentStubs.html
 
 [NEXT]
-## Types
+<!-- .slide: class="medium-slide" -->
+**Spies are used in this talk.**
 
-<ul>
-  <li>**Stubs** return hard-coded values</li>
-  <li>**Mocks** pre-define a spec of expected calls/behaviour</li>
-  <li><div class="highlighted-inline">**Spies** record the code's interaction with collaborators</div></li>
-</ul>
-<br />
-<br />
-
-Spies are the focus of this talk.
 
 [NEXT SECTION]
 ## 3. Test Doubles in Rust
@@ -634,11 +622,11 @@ fn asserting_mock_was_called() {
   let profit_over_time = predict_profit_over_time(&mock, 0, 2);
 
   // THEN:
-  // called at least once
+  // Called at least once.
 <mark>  assert!(mock.profit_at.called());</mark>
-  // called with argument 1 at least once
+  // Called with argument 1 at least once.
 <mark>  assert!(mock.profit_at.called_with((1)));</mark>
-  // called at least once with argument 1 and 0
+  // Called at least once with argument 1 and 0.
 <mark>  assert!(mock.profit_at.has_calls((1), (0)));</mark>
 }
 </code></pre>
@@ -655,13 +643,12 @@ fn asserting_mock_was_called_with_precise_constraints() {
   let profit_over_time = predict_profit_over_time(&mock, 0, 2);
 
   // THEN:
-  // Called exactly three times, once with 0, once with 1 and once
-  // once with 2.
+  // Called exactly three times, with 1, 0 and 2.
 <mark>  assert!(mock.profit_at.has_calls_exactly((1), (0), (2)));</mark>
-  // Called exactly three times, once with 0, once with 1 and
-  // once with 2, and the calls were made in the specified order.
+  // Called exactly three times, with 0, 1 and 2 (in that order).
 <mark>  assert!(mock.profit_at.has_calls_exactly_in_order(</mark>
-<mark>      (0), (1), (2)));</mark>
+<mark>      (0), (1), (2)</mark>
+<mark>  ));</mark>
 }
 </code></pre>
 
