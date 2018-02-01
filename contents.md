@@ -322,7 +322,7 @@ stunts are performed by a different actor.
 
 <ul>
   <li>**Stubs** return hard-coded values</li>
-  <li>**Mocks** pre-define a spec of expected calls / behaviour</li>
+  <li>**Mocks** pre-define a spec of expected calls/behaviour</li>
   <li>**Spies** record the code's interaction with collaborators</li>
 </ul>
 <br />
@@ -345,7 +345,7 @@ Source: https://martinfowler.com/articles/mocksArentStubs.html
 
 <ul>
   <li>**Stubs** return hard-coded values</li>
-  <li>**Mocks** pre-define a spec of expected calls / behaviour</li>
+  <li>**Mocks** pre-define a spec of expected calls/behaviour</li>
   <li><div class="highlighted-inline">**Spies** record the code's interaction with collaborators</div></li>
 </ul>
 <br />
@@ -431,6 +431,8 @@ Real `ProfitModel` implementations use:
 [NEXT]
 **`mock_trait!`**
 
+Generate mock `struct` that records interaction:
+
 <pre class="large"><code data-noescape class="rust">pub trait ProfitModel {
     fn profit_at(&self, timestamp: u64) -> f64;
 }
@@ -513,6 +515,10 @@ fn test_profit_model_is_used_for_each_timestamp() {
 <mark>  assert_eq!(3, model.profit_at.num_calls());</mark>
 }
 </code></pre>
+
+_note_
+Emphasise the fact that the generated implementation records interaction
+after the code-under-test has run. This makes it a **spy**.
 
 [NEXT]
 ### GIVEN: Setting Mock Behaviour
@@ -668,7 +674,7 @@ Useful for testing code that takes function objects for runtime polymorphism.
 Map a `vec` of elements to a function:
 
 ```rust
-let result = sequence.iter().map(func).collect();
+let result = some_vec.iter().map(func).collect();
 ```
 <!-- .element: class="large" -->
 
@@ -687,11 +693,11 @@ fn test_function_used_correctly() {
     mock.use_closure(Box::new(|x| x * 2));
 
     // WHEN:
-    let sequence = vec!(1, 2, 3, 4);
-<mark>    let output = sequence.iter().map(mock_fn);</mark>
+    let some_vec = vec!(1, 2, 3, 4);
+<mark>    let output = some_vec.iter().map(mock_fn);</mark>
 
     // THEN:
-    assert_eq!(vec!(2, 4, 6, 8), sequence);
+    assert_eq!(vec!(2, 4, 6, 8), output);
     assert!(mock.has_calls_exactly_in_order(vec!(
         1, 2, 3, 4
     )));
@@ -713,34 +719,58 @@ When a mock function has been used in a test, we typically want to make assertio
 [NEXT]
 ![robot_scenario](images/robot_scenario1.svg)
 
-|              |                                                            |
-| ------------ | ---------------------------------------------------------- |
-| `WorldState` | Struct containing current state of world. |
-| `Robot`      | Processes state of the world and makes decisions on what do to next. |
+|              |                                                                          |
+| ------------ | ------------------------------------------------------------------------ |
+| `WorldState` | Struct containing current world state                                    |
+| `Robot`      | Processes state of the world and makes decisions on what do to next.     |
 | `Actuator`   | Manipulates the world. Used by `Robot` to act on the decisions its made. |
 
 [NEXT]
-![world_state](images/world_state.svg)
-
-```rust
-pub struct WorldState {
-    ...
-}
-```
+### Test the Robot's Decisions
+![robot_scenario](images/robot_scenario2.svg)
 
 [NEXT]
-![robot](images/robot.svg)
+### Test the Robot's Decisions
+![robot_scenario](images/robot_scenario3.svg)
 
-<pre class="medium"><code data-noescape class="rust">pub struct Robot&lt;A&gt; {
+[NEXT]
+### Collaborators
+
+```rust
+pub trait Actuator {
+    fn move_forward(&mut self, amount: i32);
+    // ...
+}
+```
+<!-- .element class="large" -->
+
+[NEXT]
+### Generate Mock Collaborators
+
+```rust
+mock_trait!(
+    MockActuator,
+    move_forward(i32) -> ());
+
+impl Actuator for MockActuator {
+    mock_method!(move_forward(&mut self, amount: i32));
+}
+```
+<!-- .element class="large" -->
+
+[NEXT]
+### Implementation
+
+<pre><code data-noescape class="rust">pub struct Robot&lt;A&gt; {
     actuator: &mut A
 }
 
 impl&ltA: Actuator&gt; Robot {
-    pub fn new(actuator: &mut A) -> Robot {
+    pub fn new(actuator: &mut A) -> Robot&lt;A&gt; {
         Robot { actuator: actuator }
     }
 
-    pub fn take_action(state: WorldState) {
+    pub fn take_action(&mut self, state: WorldState) {
 <mark>        // Complex business logic that decides what actions</mark>
 <mark>        // the robot should take.</mark>
 <mark>        // This is what we want to test.</mark>
@@ -750,51 +780,18 @@ impl&ltA: Actuator&gt; Robot {
 </code></pre>
 
 [NEXT]
-![actuator](images/actuator.svg)
+### Testing the Robot
 
-```rust
-pub trait Actuator {
-    fn move_forward(&mut self, amount: i32);
-    // ...
-}
-```
-
-[NEXT]
-### Testing Robot's Decisions
-![robot_scenario](images/robot_scenario2.svg)
-
-[NEXT]
-### Testing Robot's Decisions
-![robot_scenario](images/robot_scenario3.svg)
-
-[NEXT]
-![mock_actuator](images/mock_actuator.svg)
-
-```rust
-mock_trait!(
-    MockActuator,
-    move_forward(i32) -> (),
-    speak(String, u32) -> ());
-
-impl Actuator for MockActuator {
-    mock_method!(move_forward(&mut self, amount: i32));
-    mock_method!(speak(&mut self, message: &str, volume: u32));
-}
-```
-
-[NEXT]
 <pre><code data-noescape class="rust">#[test]
 fn test_the_robot() {
     // GIVEN:
     let input_state = WorldState { ... };
-    let actuator = MockActuator::default();
-
+<mark>    let actuator = MockActuator::default();</mark>
     // WHEN:
     {
         let robot = Robot::new(&actuator);
         robot.take_action(input_state);
     }
-
     // THEN:
 <mark>    assert!(actuator.move_forward.called_with(100));</mark>
 }
@@ -857,15 +854,20 @@ Loosens test expectations, making them less brittle.
 [NEXT]
 **`called_with_pattern()`**
 
-<pre><code data-noescape class="rust">fn is_greater_than_or_equal_to_100(arg: &i32) -> bool {
-    *arg >= 100
-}
-
-#[test]
+<pre class="medium-large"><code data-noescape class="rust">#[test]
 fn test_the_robot() {
-    let robot = MockRobot::default();
-    test_complex_business_logic_that_makes_decisions(&robot);
-<mark>    assert!(robot.move_forward.called_with_pattern(</mark>
+    // GIVEN:
+    let input_state = WorldState { ... };
+    let actuator = MockActuator::default();
+    // WHEN:
+    {
+        let robot = Robot::new(&actuator);
+        robot.take_action(input_state);
+    }
+    // THEN:
+<mark>    let is_greater_or_equal_to_100 = |arg: &i32| *arg >= 100;</mark>
+
+<mark>    assert!(actuator.move_forward.called_with_pattern(</mark>
 <mark>        is_greater_than_or_equal_to_100</mark>
 <mark>    ));</mark>
 }
@@ -892,7 +894,7 @@ Use `p!` to generate matcher closures on-the-fly.
 ```rust
 use double::matcher::ge;
 
-let is_greater_than_or_equal_to_100 = p!(ge, 100);
+let is_greater_or_equal_to_100 = p!(ge, 100);
 ```
 <!-- .element: class="large" -->
 
@@ -901,9 +903,16 @@ let is_greater_than_or_equal_to_100 = p!(ge, 100);
 
 #[test]
 fn test_the_robot() {
-    let robot = MockRobot::default();
-    test_complex_business_logic_that_makes_decisions(&robot);
-<mark>    assert!(robot.move_forward.called_with_pattern(</mark>
+    // GIVEN:
+    let input_state = WorldState { ... };
+    let actuator = MockActuator::default();
+    // WHEN:
+    {
+        let robot = Robot::new(&actuator);
+        robot.take_action(input_state);
+    }
+    // THEN:
+<mark>    assert!(actuator.move_forward.called_with_pattern(</mark>
 <mark>        p!(ge, 100)</mark>
 <mark>    ));</mark>
 }
@@ -989,12 +998,12 @@ assert!(robot.move_forward.called_with_pattern(
 Assert all elements of a collection match a pattern:
 
 ```rust
-mock_func!(mock, func, (), Vec<i32>);
+mock_func!(mock_obj, func, (), Vec<i32>);
 
 func(vec!(57, -2, 4, 25260, 42));
 
 // All elements should be non-zero.
-assert!(mock.called_with_pattern(
+assert!(mock_obj.called_with_pattern(
     p!(each, p!(ne, 0))
 ));
 ```
