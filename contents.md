@@ -286,7 +286,7 @@ stunts are performed by a different actor.
   <br />
   <h4>State Verification</h4>
   <p>
-    Test code by asserting its and its collaboator's <strong>post-test state</strong>.
+    Test code by asserting its and its collaborators' <strong>post-test state</strong>.
   </p>
 </div>
 <div class="right-col">
@@ -304,14 +304,14 @@ stunts are performed by a different actor.
   <br />
   <h4>State Verification</h4>
   <p>
-    Test code by asserting its and its collaboator's <strong>post-test state</strong>.
+    Test code by asserting its and its collaborators' <strong>post-test state</strong>.
   </p>
 </div>
 <div class="right-col highlighted">
   <br />
   <h4><u>Behaviour Verification</u></h4>
   <p>
-    Test code by asserting its interaction with its collaborators.
+    Test code by asserting its <strong>interaction</strong> with its collaborators.
   </p>
   <br />
 </div>
@@ -378,7 +378,7 @@ Simple and complex **assertions** on how mocks were used/called.
 Predicting profit of a stock portfolio over time.
 
 [NEXT]
-## Interfaces
+## Collaborators
 
 ```rust
 pub trait ProfitModel {

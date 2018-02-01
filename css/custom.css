@@ -124,12 +124,11 @@ code {
 }
 
 .highlighted-inline {
-    background-color: #AAA;
+    background-color: #888;
 }
 
 .highlighted {
-    font-weight: bold !important;
-    background-color: #AAA;
+    background-color: #888;
 }
 
 /* For highlighting specific lines in code formatted using hljs */
