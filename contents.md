@@ -228,7 +228,7 @@ Anything non-deterministic that can't be reliably controlled within a unit test.
 
 [NEXT]
 <!-- .slide: class="medium-slide" -->
-## Could Also Eliminate
+## Can Also Eliminate
 <br/>
 Large internal dependencies for simpler tests.
 
@@ -971,18 +971,14 @@ fn custom_matcher<T>(arg: &T, params...) -> bool {
 2 design goals in `double`.
 
 [NEXT]
-#### 1. Rust Stable First
-
-Most mocking libraries require nightly.
+### 1. Rust Stable First
 
 _note_
 The vision for `double` is that must work with stable Rust.
 The vast majority of other mocking libraries that use nightly compiler plugins. This gives them more flexibility at the cost of restricting the user to nightly Rust.
 
 [NEXT]
-#### 2. No Changes to Production Code Required
-
-Most (all?) mocking libraries require changes to prod code.
+### 2. No Changes to Production Code Required
 
 Allows `traits` from the standard library or external crates to be mocked.
 
@@ -998,20 +994,26 @@ The following other mocking libraries have similar feature sets to `double`, req
 And none of them support mocking traits from the standard library or external crates.
 
 [NEXT]
-<!-- .slide: class="large-slide" -->
-There is a cost.
+## Challenging
+
+Meeting these goals is difficult, because Rust:
+
+* is a compiled/statically typed language
+* runs a borrow checker
 
 [NEXT]
-### Limitations
+* Most mocking libraries require nightly.
+* Most (all?) mocking libraries require prod code changes
 
-1. Longer mock definitions
-2. Limited support for generic traits
+[NEXT]
+## The Cost
+
+`double` achieves the two goals at a cost.
+
+Longer mock definitions.
 
 _note_
-(2) in particular is a difficult problem to solve. It's possible with `double`, but it requires additional boilerplate code.
-
-[NEXT]
-Ongoing work on `double` to remove these limitations.
+`double` is waiting on one nightly only feature to make it to be stable. Once that's one, the mock definitions will be even more concise.
 
 [NEXT SECTION]
 ## Fin
