@@ -1001,8 +1001,9 @@ Meeting these goals is difficult, because Rust:
 * runs a borrow checker
 
 [NEXT]
-* Most mocking libraries require nightly.
-* Most (all?) mocking libraries require prod code changes
+Most mocking libraries require nightly.
+
+Most (all?) mocking libraries require prod code changes.
 
 [NEXT]
 ## The Cost
