@@ -278,45 +278,6 @@ Similar to using a stunt double in films, where viewers don't notice that
 stunts are performed by a different actor.
 
 [NEXT]
-## Two Approaches
-
-[NEXT]
-<div class="left-col">
-  <br />
-  <h4>State Verification</h4>
-  <p>
-    Test code by asserting its and its collaborators' <strong>post-test state</strong>.
-  </p>
-</div>
-<div class="right-col">
-  <br />
-  <h4>Behaviour Verification</h4>
-  <p>
-    Test code by asserting its <strong>interaction</strong> with its collaborators.
-  </p>
-  <br />
-</div>
-<div class="clear-col"></div>
-
-[NEXT]
-<div class="left-col">
-  <br />
-  <h4>State Verification</h4>
-  <p>
-    Test code by asserting its and its collaborators' <strong>post-test state</strong>.
-  </p>
-</div>
-<div class="right-col highlighted">
-  <br />
-  <h4><u>Behaviour Verification</u></h4>
-  <p>
-    Test code by asserting its <strong>interaction</strong> with its collaborators.
-  </p>
-  <br />
-</div>
-<div class="clear-col"></div>
-
-[NEXT]
 Many types of test double:
 
 * Stub
@@ -338,6 +299,11 @@ Source: https://martinfowler.com/articles/mocksArentStubs.html
 [NEXT]
 <!-- .slide: class="medium-slide" -->
 **Spies are used in this talk.**
+
+[NEXT]
+## Spies Perform Behaviour Verification
+
+Tests code by asserting its *interaction* with its *collaborators*.
 
 
 [NEXT SECTION]
