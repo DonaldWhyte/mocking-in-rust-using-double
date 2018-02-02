@@ -51,7 +51,8 @@ img[alt="fosdem"] {
 /* Font Styling */
 
 code {
-    color: #22F;
+    color: #00D;
+    font-weight: bold !important;
 }
 
 .large code {

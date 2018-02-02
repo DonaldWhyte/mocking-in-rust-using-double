@@ -227,7 +227,6 @@ Anything non-deterministic that can't be reliably controlled within a unit test.
 **External code dependencies** &mdash; libraries
 
 [NEXT]
-<!-- .slide: class="medium-slide" -->
 ## Can Also Eliminate
 <br/>
 Large internal dependencies for simpler tests.
