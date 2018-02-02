@@ -1101,7 +1101,7 @@ For completeness, here's a list of other Rust mocking crates. In additional to c
   <br />
   [don@donsoft.io](mailto:don@donsoft.io)<br />
   [@donald_whyte](http://twitter.com/donald_whyte)<br />
-  <span class="github">https://github.com/DonaldWhyte</span>
+  https://github.com/DonaldWhyte
 </div>
 <div class="right-col">
   ![small_portrait](images/donald.jpg)
