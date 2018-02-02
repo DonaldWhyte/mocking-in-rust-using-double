@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="457px" height="463px" viewBox="0 0 457 463" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 48.2 (47327) - http://www.bohemiancoding.com/sketch -->
+    <title>Group</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group">
+            <path d="M242.2,430.2 C367.4,449.5 457,312.8 457,193 C457,73 344.4,0 215,0 C86,0 -23,95.4 4.3,203 C31.3,310.4 117.1,410.8 242.3,430.2 L242.2,430.2 Z" id="Shape" fill="#D3D3D3" fill-rule="nonzero"></path>
+            <text id="All-Possible-Behaviour" fill="#000000" font-family="PTMono-Bold, PT Mono" font-size="30" font-weight="bold">
+                <tspan x="31" y="462">All Possible Behaviour</tspan>
+            </text>
+            <path d="M222.602008,295.313951 C286.407982,305.149856 332.071043,235.48311 332.071043,174.429152 C332.071043,113.273266 274.686438,76.0701025 208.740009,76.0701025 C142.997431,76.0701025 87.4475025,124.689031 101.360466,179.525476 C115.12054,234.259992 158.846999,285.427083 222.652972,295.313951 L222.602008,295.313951 Z" id="Shape" fill="#858585" fill-rule="nonzero" transform="translate(215.638896, 186.159361) rotate(114.000000) translate(-215.638896, -186.159361) "></path>
+            <path d="M215.914357,255.710021 C255.371073,262.072471 283.608467,217.007865 283.608467,177.514523 C283.608467,137.955251 248.122634,113.890025 207.342292,113.890025 C166.688007,113.890025 132.336714,145.339648 140.940294,180.811131 C149.449331,216.216681 176.489156,249.314605 215.945872,255.710021 L215.914357,255.710021 Z" id="Shape" fill="#AA0000" fill-rule="nonzero" opacity="0" transform="translate(211.608467, 185.102323) rotate(163.000000) translate(-211.608467, -185.102323) "></path>
+            <text id="Expected" fill="#000000" font-family="PTMono-Bold, PT Mono" font-size="30" font-weight="bold">
+                <tspan x="307" y="100">Expected</tspan>
+            </text>
+            <text id="Asserted" fill="#000000" font-family="PTMono-Bold, PT Mono" font-size="30" font-weight="bold">
+                <tspan x="24" y="205">Asserted</tspan>
+            </text>
+            <path d="M219.358965,229.411221 C243.587162,232.578683 260.926191,210.143861 260.926191,190.482619 C260.926191,170.788555 239.136295,158.807998 214.095332,158.807998 C189.131774,158.807998 168.038536,174.46478 173.321521,192.123792 C178.546452,209.74998 195.15012,226.227347 219.378317,229.411221 L219.358965,229.411221 Z" id="Shape" fill="#000000" fill-rule="nonzero" transform="translate(216.714955, 194.260106) rotate(172.000000) translate(-216.714955, -194.260106) "></path>
+        </g>
+    </g>
+</svg>
