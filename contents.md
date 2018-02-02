@@ -230,16 +230,15 @@ Anything non-deterministic that can't be reliably controlled within a unit test.
 <!-- .slide: class="medium-slide" -->
 ## Could Also Eliminate
 <br/>
-Large internal dependencies.
+Large internal dependencies for simpler tests.
 
-[NEXT]
+_note_
 * tests become smaller
 * only test one thing
     * failures easier to understand
     * easy to understand
     * easy to change
 
-_note_
 Downsides to testing internal code dependencies:
 
 * component is tested with mock collaborators that behave like you *think* they do
@@ -279,7 +278,7 @@ Similar to using a stunt double in films, where viewers don't notice that
 stunts are performed by a different actor.
 
 [NEXT]
-### Two Approaches
+## Two Approaches
 
 [NEXT]
 <div class="left-col">
@@ -658,36 +657,23 @@ fn asserting_mock_was_called_with_precise_constraints() {
 Useful for testing code that takes function objects for runtime polymorphism.
 
 [NEXT]
-Map a `vec` of elements to a function:
-
-```rust
-let result = some_vec.iter().map(func).collect();
-```
-<!-- .element: class="large" -->
-
-[NEXT]
 **`mock_func!`**
 
-<pre class="medium"><code data-noescape class="rust">#[test]
-fn test_function_used_correctly() {
+<pre><code data-noescape class="rust">fn test_input_function_called_twice() {
     // GIVEN:
-<mark>    mock_func!(</mark>
-<mark>        mock,     // variable that stores mock object</mark>
-<mark>        mock_fn,  // variable that stores closure</mark>
-<mark>        i32,      // return value types</mark>
-<mark>        i32);     // argument 1 type</mark>
+<mark>    mock_func!(mock,     // variable that stores mock object</mark>
+<mark>               mock_fn,  // variable that stores closure</mark>
+<mark>               i32,      // return value type</mark>
+<mark>               i32);     // argument 1 type</mark>
 
-    mock.use_closure(Box::new(|x| x * 2));
+    mock.return_value(10);
 
     // WHEN:
-    let some_vec = vec!(1, 2, 3, 4);
-<mark>    let output = some_vec.iter().map(mock_fn);</mark>
+    code_that_calls_func_twice(&mock_fn);
 
     // THEN:
-    assert_eq!(vec!(2, 4, 6, 8), output);
-    assert!(mock.has_calls_exactly_in_order(vec!(
-        1, 2, 3, 4
-    )));
+    assert_eq!(2, mock.num_calls());
+    assert!(mock.called_with(42));
 }
 </code></pre>
 
@@ -832,7 +818,7 @@ Writing loose assertions can be surprisingly cumbersome.
 ### Pattern Matching to the Rescue
 
 [NEXT]
-Match argument values to a patterns.
+Match argument values to patterns.
 
 **_Not exact values._**
 
@@ -985,12 +971,12 @@ assert!(robot.move_forward.called_with_pattern(
 Assert all elements of a collection match a pattern:
 
 ```rust
-mock_func!(mock_obj, func, (), Vec<i32>);
+let mock = MockNumberRecorder::default();
 
-func(vec!(57, -2, 4, 25260, 42));
+mock.record_numbers(vec!(42, 100, -49395, 502));
 
-// All elements should be non-zero.
-assert!(mock_obj.called_with_pattern(
+// Check all elements in passed in vector are non-zero.
+assert!(mock.record_numbers.called_with_pattern(
     p!(each, p!(ne, 0))
 ));
 ```
@@ -1073,23 +1059,16 @@ Achieved in Rust by replacing `trait`s and functions.
 [NEXT]
 Behaviour verification can overfit implementation.
 
-Pattern matching **expands the asserted behaviour space**.
-
-Reducing overfitting.
+Pattern matching **expands asserted behaviour space** to reduce overfitting.
 
 [NEXT]
 `double` is a crate for generating `trait`/function mocks.
 
-Wide array of mock behaviours and call assertions.
+Wide array of behaviour setups and call assertions.
 
 First-class pattern matching support.
 
-[NEXT]
-`double` supports stable and requires no code changes.
-
-These features come at a cost.
-
-Ongoing work on the library to remove these limitations.
+Requires no changes to production code.
 
 [NEXT]
 ### Alternative Mocking Libraries
