@@ -1030,6 +1030,111 @@ Most (all?) mocking libraries require prod code changes.
 
 Longer mock definitions.
 
+[NEXT]
+## Why Longer Mock Definitions?
+
+[NEXT]
+### No Type Decay in Stable Rust
+
+Possible in C++:
+
+```cpp
+decay<int>::type          // type is `int`
+decay<const int&>::type   // type is `int`
+decay<int&&>::type        // type is `int`
+```
+
+Impossible in Rust stable:
+
+```cpp
+decay<u32>::type           // type is `u32`
+decay<&u32>::type          // type is `u32`
+decay<&mut u32>::type      // type is `u32`
+decay<&static u32>::type   // type is `u32`
+```
+
+[NEXT]
+### Why is Type Decay Needed?
+
+Supporting methods that take **references**.
+
+Mocks store **copies** of received args for use in call assertions.
+
+`mock_trait` needs to decay reference types to value types when generating
+the mock `struct`.
+
+[NEXT]
+<!-- .slide: class="medium-slide" -->
+**Automatic decay not possible in Rust stable!**
+
+[NEXT]
+### Example
+
+<pre class="largish"><code data-noescape class="rust">pub trait ResultWriter {
+    fn write(&self,
+<mark>             filename: &str,</mark>
+<mark>             results: &Vec&ltf64&gt,</mark>
+             timestamp: u32) -> ()
+}
+</code></pre>
+
+`ResultWriter::write` takes two references.
+
+[NEXT]
+### The Present — Without Decay
+
+<pre class="largish"><code data-noescape class="rust">mock_trait!(
+    MockWriter,
+<mark>    write(String,     // decayed form of `&str`</mark>
+<mark>          Vec&ltf64&gt,   // decayed form of `&Vec&ltf64&gt`</mark>
+          u32));
+
+impl ResultWriter for MockWriter {
+    mock_method!(write(&self,
+<mark>                       filename: &str,</mark>
+<mark>                       results: &Vec&ltf64&gt,</mark>
+                       timestamp: u32));
+}
+</code></pre>
+
+Must specify `ResultWriter::write` arguments twice.
+
+_note_
+Once for the struct, which has the **manually decayed** arg types
+
+And once for the `trait impl`, which uses the trait method's original reference
+types.
+
+This is cumbersome and affects test code readability.
+
+[NEXT]
+### The Future — With Decay
+
+```rust
+mock_trait!(
+    ResultsWriter,
+    MockWriter,
+    write(&self,
+          filename: &str,
+          results: &Vec<f64>,
+          timestamp: u32)
+);
+```
+<!-- .element: class="largish" -->
+
+Only need to specify arguments **once**!
+
+References will be **automatically decayed** to value types.
+
+[NEXT]
+### Generic Specialisation
+
+[**RFC 1210**](https://github.com/rust-lang/rust/issues/31844) introduces generic specialisation.
+
+Makes type decay possible.
+
+**Only in nightly.** No ETA on when it reaches stable.
+
 _note_
 `double` is waiting on one nightly only feature to make it to be stable. Once that's one, the mock definitions will be even more concise.
 
