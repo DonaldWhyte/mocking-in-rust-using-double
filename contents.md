@@ -567,6 +567,23 @@ fn using_closure_to_compute_return_value() {
 </code></pre>
 
 [NEXT]
+### Precedence Order
+
+|   |   |
+| - | ---------------------------------- |
+|   | **Behaviour for specific inputs**  |
+| 0 | `use_closure_for((args), closure)` |
+| 1 | `use_fn_for((args), func)`         |
+| 2 | `return_value_for((args), value)`  |
+|   | **Behaviour for any inputs**       |
+| 3 | `use_fn(func)`                     |
+| 4 | `use_closure(closure)`             |
+| 5 | `return_value(value)`              |
+|   | **When no behaviour is set**       |
+| 6 | `ReturnType::default()`            |
+<!-- .element class="medium-table-text" -->
+
+[NEXT]
 ### THEN: Code Used Mock as Expected
 
 Verify mocks are called:
@@ -792,6 +809,7 @@ Loosens test expectations, making them less brittle.
 [NEXT]
 **`called_with_pattern()`**
 
+[NEXT]
 <pre class="medium-large"><code data-noescape class="rust">#[test]
 fn test_the_robot() {
     // GIVEN:
@@ -1079,6 +1097,38 @@ For completeness, here's a list of other Rust mocking crates. In additional to c
 
 [NEXT SECTION]
 ## Appendix
+
+[NEXT]
+### Pattern Matching with Multiple Args
+
+```rust
+pub trait ResultWriter {
+    fn write(&self,
+             filename: &str,
+             results: &Vec<f64>,
+             timestamp: u32) -> Result<(), String>;
+}
+```
+
+[NEXT]
+**`matcher!`**
+
+<pre><code data-noescape class="rust">#[test]
+fn test_results_are_all_above_zero_and_written_to_csv_file() {
+    // GIVEN:
+    let writer = MockWriter::new(Ok());
+    // WHEN:
+    code_under_test(&writer);
+    // THEN:
+    assert(writer.called_with_pattern(
+<mark>        matcher!(</mark>
+<mark>          p!(ends_with, ".csv"),    // filename</mark>
+<mark>          p!(each, p!(gt, 0))       // results</mark>
+<mark>          any                       // timestamp</mark>
+<mark>        )</mark>
+    ));
+}
+</code></pre>
 
 [NEXT]
 ### Image Credits
