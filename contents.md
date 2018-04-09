@@ -567,23 +567,6 @@ fn using_closure_to_compute_return_value() {
 </code></pre>
 
 [NEXT]
-### Precedence Order
-
-|   |   |
-| - | ---------------------------------- |
-|   | **Behaviour for specific inputs**  |
-| 0 | `use_closure_for((args), closure)` |
-| 1 | `use_fn_for((args), func)`         |
-| 2 | `return_value_for((args), value)`  |
-|   | **Behaviour for any inputs**       |
-| 3 | `use_fn(func)`                     |
-| 4 | `use_closure(closure)`             |
-| 5 | `return_value(value)`              |
-|   | **When no behaviour is set**       |
-| 6 | `ReturnType::default()`            |
-<!-- .element class="medium-table-text" -->
-
-[NEXT]
 ### THEN: Code Used Mock as Expected
 
 Verify mocks are called:
@@ -1028,10 +1011,22 @@ Most (all?) mocking libraries require prod code changes.
 
 `double` achieves the two goals at a cost.
 
-Longer mock definitions.
+Duplicate mock definitions.
 
 [NEXT]
-## Why Longer Mock Definitions?
+### Duplicate mock definitions
+
+<pre class="largish"><code data-noescape class="rust">mock_trait!(
+    MockModel,
+<mark>    profit_at(u64) -> f64);</mark>
+
+impl ProfitModel for MockModel {
+<mark>    mock_method!(profit_at(&self, timestamp: u64) -> f64);</mark>
+}
+</code></pre>
+
+[NEXT]
+## Why Duplicate Definitions?
 
 [NEXT]
 ### No Type Decay in Stable Rust
@@ -1062,10 +1057,6 @@ Mocks store **copies** of received args for use in call assertions.
 
 `mock_trait` needs to decay reference types to value types when generating
 the mock `struct`.
-
-[NEXT]
-<!-- .slide: class="medium-slide" -->
-**Automatic decay not possible in Rust stable!**
 
 [NEXT]
 ### Example
